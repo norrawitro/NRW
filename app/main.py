@@ -3,9 +3,10 @@ NRW - Norrawit Roopsoong Web
 Main FastAPI application entry point
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 
 from app.routers import iot, shop, admin, game
 from app.database import engine, Base
@@ -30,6 +31,6 @@ app.include_router(shop.router,  prefix="/shop",  tags=["Shop"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 app.include_router(game.router,  prefix="/game",  tags=["Game"])
 
-@app.get("/")
-async def root():
-    return {"project": "NRW", "status": "running"}
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})

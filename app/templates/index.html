@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NRW — Norrawit Roopsoong Web</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #171717;
+      --white: #ffffff;
+      --gray-600: #4d4d4d;
+      --gray-400: #808080;
+      --gray-100: #ebebeb;
+      --gray-50: #fafafa;
+      --blue: #0a72ef;
+      --green: #16a34a;
+      --purple: #7c3aed;
+      --red: #ff5b4f;
+      --border: rgba(0,0,0,0.08) 0px 0px 0px 1px;
+      --card-shadow: rgba(0,0,0,0.08) 0px 0px 0px 1px, rgba(0,0,0,0.04) 0px 2px 2px, #fafafa 0px 0px 0px 1px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Geist', system-ui, -apple-system, sans-serif;
+      background: var(--white);
+      color: var(--black);
+      font-feature-settings: "liga";
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--gray-100);
+      padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-size: 18px; font-weight: 600;
+      letter-spacing: -0.5px; color: var(--black);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--blue); }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-links a {
+      font-size: 14px; font-weight: 500; color: var(--gray-600);
+      text-decoration: none; padding: 6px 12px; border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: var(--black); background: var(--gray-50); }
+    .nav-cta {
+      background: var(--black); color: var(--white) !important;
+      border-radius: 6px; padding: 6px 14px !important;
+      font-weight: 500 !important;
+    }
+    .nav-cta:hover { background: #333 !important; color: var(--white) !important; }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 100px 32px 80px;
+      max-width: 860px; margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ebf5ff; color: #0068d6;
+      font-size: 12px; font-weight: 500;
+      padding: 4px 12px; border-radius: 9999px;
+      margin-bottom: 28px;
+    }
+    .hero-badge::before { content: "●"; font-size: 8px; color: #16a34a; }
+    .hero h1 {
+      font-size: 56px; font-weight: 600; line-height: 1.05;
+      letter-spacing: -2.8px; color: var(--black);
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--blue); }
+    .hero p {
+      font-size: 20px; font-weight: 400; line-height: 1.7;
+      color: var(--gray-600); max-width: 580px; margin: 0 auto 40px;
+    }
+    .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--black); color: var(--white);
+      font-size: 15px; font-weight: 500;
+      padding: 10px 22px; border-radius: 6px;
+      text-decoration: none; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #333; }
+    .btn-secondary {
+      background: var(--white); color: var(--black);
+      font-size: 15px; font-weight: 500;
+      padding: 10px 22px; border-radius: 6px;
+      text-decoration: none;
+      box-shadow: var(--border);
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: var(--gray-50); }
+
+    /* URL PILL */
+    .hero-url {
+      margin-top: 32px;
+      display: inline-flex; align-items: center; gap-8px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 13px; color: var(--gray-400);
+      background: var(--gray-50);
+      border-radius: 9999px; padding: 6px 16px;
+      box-shadow: var(--border);
+    }
+
+    /* DIVIDER */
+    .divider { border: none; border-top: 1px solid var(--gray-100); margin: 0; }
+
+    /* SERVICES */
+    .section { padding: 80px 32px; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--gray-400); margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 40px; font-weight: 600;
+      letter-spacing: -2px; margin-bottom: 12px;
+    }
+    .section-desc {
+      font-size: 18px; color: var(--gray-600);
+      line-height: 1.6; max-width: 520px; margin-bottom: 48px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: rgba(0,0,0,0.12) 0px 0px 0px 1px, rgba(0,0,0,0.08) 0px 8px 16px;
+    }
+    .card-icon {
+      font-size: 28px; margin-bottom: 16px;
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; background: var(--gray-50);
+      box-shadow: var(--border);
+    }
+    .card h3 {
+      font-size: 18px; font-weight: 600;
+      letter-spacing: -0.5px; margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 14px; color: var(--gray-600);
+      line-height: 1.6;
+    }
+    .card-tag {
+      display: inline-block; margin-top: 16px;
+      font-size: 11px; font-weight: 500;
+      font-family: 'Geist Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 3px 8px; border-radius: 4px;
+    }
+    .tag-blue  { background: #eff6ff; color: #1d4ed8; }
+    .tag-green { background: #f0fdf4; color: #15803d; }
+    .tag-purple{ background: #faf5ff; color: #6d28d9; }
+    .tag-red   { background: #fff1f2; color: #be123c; }
+
+    /* STATS */
+    .stats-section {
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-100);
+      border-bottom: 1px solid var(--gray-100);
+      padding: 60px 32px;
+    }
+    .stats-grid {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 32px; text-align: center;
+    }
+    .stat-number {
+      font-size: 40px; font-weight: 600;
+      letter-spacing: -2px; color: var(--black);
+    }
+    .stat-label {
+      font-size: 14px; color: var(--gray-600); margin-top: 4px;
+    }
+
+    /* TECH STACK */
+    .stack-pills {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px;
+    }
+    .pill {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500;
+      font-family: 'Geist Mono', monospace;
+      padding: 6px 14px; border-radius: 9999px;
+      box-shadow: var(--border);
+      background: var(--white);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--gray-100);
+      padding: 40px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .footer-logo { font-size: 16px; font-weight: 600; letter-spacing: -0.5px; }
+    .footer-logo span { color: var(--blue); }
+    .footer-text { font-size: 13px; color: var(--gray-400); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a {
+      font-size: 13px; color: var(--gray-400);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--black); }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 36px; letter-spacing: -1.5px; }
+      .hero p { font-size: 16px; }
+      .section-title { font-size: 28px; letter-spacing: -1px; }
+      nav { padding: 0 16px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .section { padding: 48px 16px; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">NRW<span>.</span></a>
+  <div class="nav-links">
+    <a href="/shop/">Shop</a>
+    <a href="/iot/ping">IoT</a>
+    <a href="/game/">Game</a>
+    <a href="/admin/">Admin</a>
+    <a href="/docs" class="nav-cta">API Docs</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">Server Online</div>
+  <h1>Norrawit Roopsoong<br><span>Web</span></h1>
+  <p>Multi-purpose server สำหรับ IoT, ร้านค้าออนไลน์, จัดการข้อมูล และ Game Server ในที่เดียว</p>
+  <div class="hero-buttons">
+    <a href="/docs" class="btn-primary">ดู API Docs</a>
+    <a href="https://github.com/norrawitro/NRW" class="btn-secondary" target="_blank">GitHub</a>
+  </div>
+  <div class="hero-url">nora-web.tail85b885.ts.net</div>
+</section>
+
+<hr class="divider">
+
+<!-- SERVICES -->
+<section class="section">
+  <div class="section-label">Services</div>
+  <h2 class="section-title">ทุกอย่างในที่เดียว</h2>
+  <p class="section-desc">ระบบ server ครบวงจรที่รองรับหลากหลายการใช้งาน</p>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">🤖</div>
+      <h3>IoT / ESP32</h3>
+      <p>รับข้อมูล sensor และส่ง command ไปยังอุปกรณ์ ESP32 แบบ real-time</p>
+      <span class="card-tag tag-blue">/iot/</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">🛍️</div>
+      <h3>Shop</h3>
+      <p>ระบบร้านค้าออนไลน์ จัดการสินค้า คำสั่งซื้อ และชำระเงินออนไลน์</p>
+      <span class="card-tag tag-green">/shop/</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">🛠️</div>
+      <h3>Admin</h3>
+      <p>Dashboard จัดการข้อมูลระบบ ผู้ใช้งาน และ monitor ภาพรวมทั้งหมด</p>
+      <span class="card-tag tag-purple">/admin/</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎮</div>
+      <h3>Game Server</h3>
+      <p>Real-time game server รองรับ WebSocket สำหรับ multiplayer online</p>
+      <span class="card-tag tag-red">/game/</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STATS -->
+<div class="stats-section">
+  <div class="stats-grid">
+    <div>
+      <div class="stat-number">4</div>
+      <div class="stat-label">Services</div>
+    </div>
+    <div>
+      <div class="stat-number">1</div>
+      <div class="stat-label">Server</div>
+    </div>
+    <div>
+      <div class="stat-number">∞</div>
+      <div class="stat-label">Possibilities</div>
+    </div>
+    <div>
+      <div class="stat-number">24/7</div>
+      <div class="stat-label">Online</div>
+    </div>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<section class="section">
+  <div class="section-label">Tech Stack</div>
+  <h2 class="section-title">สร้างด้วยเทคโนโลยีทันสมัย</h2>
+  <p class="section-desc">เลือกใช้ tools ที่เหมาะสมและทรงพลังสำหรับแต่ละงาน</p>
+  <div class="stack-pills">
+    <div class="pill">🐍 Python</div>
+    <div class="pill">⚡ FastAPI</div>
+    <div class="pill">🐘 PostgreSQL</div>
+    <div class="pill">🔗 SQLAlchemy</div>
+    <div class="pill">🌐 Tailscale Funnel</div>
+    <div class="pill">🔌 WebSocket</div>
+    <div class="pill">📡 ESP32 / IoT</div>
+    <div class="pill">🐙 GitHub</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">NRW<span>.</span></div>
+  <div class="footer-text">© 2026 Norrawit Roopsoong — All rights reserved</div>
+  <div class="footer-links">
+    <a href="/docs">API</a>
+    <a href="https://github.com/norrawitro/NRW" target="_blank">GitHub</a>
+    <a href="/admin/">Admin</a>
+  </div>
+</footer>
+
+</body>
+</html>
