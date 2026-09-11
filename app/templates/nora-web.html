@@ -840,75 +840,8 @@ function closeDrawer(){
 }
 
 /* ============================================================
-   EVENT WIRING
+   NEWS FUNCTIONS
    ============================================================ */
-document.getElementById('hamburger').onclick = ()=>{
-  document.body.classList.toggle('sidebar-collapsed');
-};
-document.getElementById('themeBtn').onclick = ()=>{
-  State.dark = !State.dark;
-  document.documentElement.setAttribute('data-theme', State.dark?'dark':'');
-  document.getElementById('themeBtn').textContent = State.dark?'☀️':'🌙';
-};
-document.getElementById('drawerOverlay').onclick = closeDrawer;
-document.getElementById('drawerClose').onclick = closeDrawer;
-
-document.addEventListener('click', (e)=>{
-  const viewEl = e.target.closest('[data-view]');
-  if(viewEl){ e.preventDefault(); showView(viewEl.dataset.view); return; }
-
-  const modEl = e.target.closest('[data-module]');
-  if(modEl){
-    e.preventDefault();
-    const m = MODULES.find(x=>x.id===modEl.dataset.module);
-    if(!m) return;
-    if(m.phase===1){ showView(m.view); } else { openDrawer(m.id); }
-    return;
-  }
-
-  const filterEl = e.target.closest('[data-filter]');
-  if(filterEl){ State.newsFilter = filterEl.dataset.filter; renderNewsFilters(); renderNewsFeed(); return; }
-
-  const catEl = e.target.closest('#newPostCatRow [data-cat]');
-  if(catEl){ document.querySelectorAll('#newPostCatRow .cat-chip').forEach(c=>c.classList.remove('on')); catEl.classList.add('on'); return; }
-
-  const crumbEl = e.target.closest('[data-crumb]');
-  if(crumbEl){ State.cloudPath = State.cloudPath.slice(0, +crumbEl.dataset.crumb+1); renderBreadcrumb(); renderFileGrid(); return; }
-
-  const delEl = e.target.closest('[data-del]');
-  if(delEl){ e.stopPropagation(); DataLayer.deleteCloudItem(delEl.dataset.del); renderFileGrid(); return; }
-
-  const cardEl = e.target.closest('.file-card');
-  if(cardEl && !delEl){
-    const item = State.cloudItems.find(i=>i.id===cardEl.dataset.item);
-    if(item && item.type==='folder'){ State.cloudPath.push({id:item.id, name:item.name}); renderBreadcrumb(); renderFileGrid(); }
-    return;
-  }
-
-  const quickEl = e.target.closest('[data-quick]');
-  if(quickEl){ sendAIMessage(quickEl.dataset.quick); return; }
-});
-
-document.getElementById('submitPost').onclick = async ()=>{
-  const text = document.getElementById('newPostText').value.trim();
-  if(!text) return;
-  const cat = document.querySelector('#newPostCatRow .cat-chip.on')?.dataset.cat || 'announce';
-  const btn = document.getElementById('submitPost');
-  btn.disabled = true; btn.textContent = 'กำลังโพสต์…';
-  try{
-    const r = await fetch('/news/posts', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({text, cat})
-    });
-    if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อนโพสต์'); window.location='/members/login'; return; }
-    if(!r.ok){ const e=await r.json(); alert(e.detail||'เกิดข้อผิดพลาด'); return; }
-    document.getElementById('newPostText').value = '';
-    await renderNewsFeed();
-  } finally{ btn.disabled=false; btn.textContent='โพสต์'; }
-};
-
-// ── Like ─────────────────────────────────────────────────────
 async function toggleLike(postId, btn){
   const r = await fetch(`/news/posts/${postId}/like`, {method:'POST'});
   if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return; }
@@ -917,7 +850,6 @@ async function toggleLike(postId, btn){
   btn.innerHTML = `👍 ${d.liked?'ถูกใจแล้ว':'ถูกใจ'} <span class="like-count">${d.likes>0?'('+d.likes+')':''}</span>`;
 }
 
-// ── Comments ──────────────────────────────────────────────────
 async function loadComments(postId){
   const r = await fetch(`/news/posts/${postId}/comments`);
   const d = await r.json();
@@ -937,43 +869,113 @@ async function submitComment(postId){
   const text = input.value.trim();
   if(!text) return;
   const r = await fetch(`/news/posts/${postId}/comments`, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({text})
   });
   if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return; }
   input.value = '';
   await loadComments(postId);
-  // อัปเดตตัวเลข comment
-  const toggleBtn = document.querySelector(`[data-comment-toggle="${postId}"] span`);
-  if(toggleBtn){
-    const d = await r.json();
-    const count = document.querySelectorAll(`#comment-list-${postId} .comment-item`).length;
-    toggleBtn.textContent = count > 0 ? `(${count})` : '';
-  }
 }
 
-// ── Event delegation: like + comment toggle + delete ─────────
-document.addEventListener('click', async e=>{
+async function submitPostFn(){
+  const text = document.getElementById('newPostText').value.trim();
+  if(!text) return;
+  const cat = document.querySelector('#newPostCatRow .cat-chip.on')?.dataset.cat || 'announce';
+  const btn = document.getElementById('submitPost');
+  btn.disabled = true; btn.textContent = 'กำลังโพสต์…';
+  try{
+    const r = await fetch('/news/posts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, cat})
+    });
+    if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อนโพสต์'); window.location='/members/login'; return; }
+    if(!r.ok){ const er=await r.json(); alert(er.detail||'เกิดข้อผิดพลาด'); return; }
+    document.getElementById('newPostText').value = '';
+    await renderNewsFeed();
+  } finally{ btn.disabled=false; btn.textContent='โพสต์'; }
+}
+
+/* ============================================================
+   EVENT WIRING
+   ============================================================ */
+document.getElementById('hamburger').onclick = ()=>{
+  document.body.classList.toggle('sidebar-collapsed');
+};
+document.getElementById('themeBtn').onclick = ()=>{
+  State.dark = !State.dark;
+  document.documentElement.setAttribute('data-theme', State.dark?'dark':'');
+  document.getElementById('themeBtn').textContent = State.dark?'☀️':'🌙';
+};
+document.getElementById('drawerOverlay').onclick = closeDrawer;
+document.getElementById('drawerClose').onclick = closeDrawer;
+document.getElementById('submitPost').onclick = submitPostFn;
+
+document.addEventListener('click', async (e)=>{
+
+  // ── like ──────────────────────────────────────────────────
   const likeBtn = e.target.closest('.like-btn[data-like]');
   if(likeBtn){ await toggleLike(likeBtn.dataset.like, likeBtn); return; }
 
-  const toggleBtn = e.target.closest('.comment-toggle-btn[data-comment-toggle]');
-  if(toggleBtn){
-    const pid = toggleBtn.dataset.commentToggle;
+  // ── comment toggle ────────────────────────────────────────
+  const commentToggleBtn = e.target.closest('.comment-toggle-btn[data-comment-toggle]');
+  if(commentToggleBtn){
+    const pid = commentToggleBtn.dataset.commentToggle;
     const sec = document.getElementById(`comments-${pid}`);
     const isOpen = sec.classList.toggle('open');
     if(isOpen) await loadComments(pid);
     return;
   }
 
-  const delBtn = e.target.closest('[data-del-post]');
-  if(delBtn){
+  // ── delete post ───────────────────────────────────────────
+  const delPostBtn = e.target.closest('[data-del-post]');
+  if(delPostBtn){
     if(!confirm('ลบโพสต์นี้?')) return;
-    const r = await fetch(`/news/posts/${delBtn.dataset.delPost}`, {method:'DELETE'});
+    const r = await fetch(`/news/posts/${delPostBtn.dataset.delPost}`, {method:'DELETE'});
     if(r.ok){ await renderNewsFeed(); await renderHomeFeed(); }
     return;
   }
+
+  // ── data-view (SPA navigation) ────────────────────────────
+  const viewEl = e.target.closest('[data-view]');
+  if(viewEl){ e.preventDefault(); showView(viewEl.dataset.view); return; }
+
+  // ── data-module ───────────────────────────────────────────
+  const modEl = e.target.closest('[data-module]');
+  if(modEl){
+    e.preventDefault();
+    const m = MODULES.find(x=>x.id===modEl.dataset.module);
+    if(!m) return;
+    if(m.phase===1){ showView(m.view); } else { openDrawer(m.id); }
+    return;
+  }
+
+  // ── news filter ───────────────────────────────────────────
+  const filterEl = e.target.closest('[data-filter]');
+  if(filterEl){ State.newsFilter = filterEl.dataset.filter; renderNewsFilters(); renderNewsFeed(); return; }
+
+  // ── post category chip ────────────────────────────────────
+  const catEl = e.target.closest('#newPostCatRow [data-cat]');
+  if(catEl){ document.querySelectorAll('#newPostCatRow .cat-chip').forEach(c=>c.classList.remove('on')); catEl.classList.add('on'); return; }
+
+  // ── cloud breadcrumb ──────────────────────────────────────
+  const crumbEl = e.target.closest('[data-crumb]');
+  if(crumbEl){ State.cloudPath = State.cloudPath.slice(0, +crumbEl.dataset.crumb+1); renderBreadcrumb(); renderFileGrid(); return; }
+
+  // ── delete cloud item ─────────────────────────────────────
+  const delEl = e.target.closest('[data-del]');
+  if(delEl){ e.stopPropagation(); DataLayer.deleteCloudItem(delEl.dataset.del); renderFileGrid(); return; }
+
+  // ── open cloud folder ─────────────────────────────────────
+  const cardEl = e.target.closest('.file-card');
+  if(cardEl && !e.target.closest('[data-del]')){
+    const item = State.cloudItems.find(i=>i.id===cardEl.dataset.item);
+    if(item && item.type==='folder'){ State.cloudPath.push({id:item.id, name:item.name}); renderBreadcrumb(); renderFileGrid(); }
+    return;
+  }
+
+  // ── AI quick reply ────────────────────────────────────────
+  const quickEl = e.target.closest('[data-quick]');
+  if(quickEl){ sendAIMessage(quickEl.dataset.quick); return; }
 });
 
 document.getElementById('uploadBtn').onclick = ()=>{
