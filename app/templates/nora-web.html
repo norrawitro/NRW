@@ -192,8 +192,20 @@
     .post-tag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:auto;}
     .post-body{font-size:14px;margin-bottom:10px;white-space:pre-wrap}
     .post-actions{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:8px}
-    .post-actions button{flex:1;padding:7px;border-radius:8px;font-size:13px;color:var(--ink-soft)}
+    .post-actions button{flex:1;padding:7px;border-radius:8px;font-size:13px;color:var(--ink-soft);background:none;border:none;cursor:pointer;transition:all .2s}
     .post-actions button:hover{background:var(--surface-2)}
+    .post-actions button.liked{color:var(--primary);font-weight:700}
+    .post-actions button.liked:hover{background:var(--primary-soft)}
+    .comment-section{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:none}
+    .comment-section.open{display:block}
+    .comment-item{display:flex;gap:8px;margin-bottom:8px}
+    .comment-av{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .comment-body{flex:1;background:var(--surface-2);border-radius:10px;padding:7px 10px;font-size:13px}
+    .comment-author{font-weight:600;font-size:11px;color:var(--ink-soft);margin-bottom:2px}
+    .comment-input-row{display:flex;gap:8px;margin-top:8px}
+    .comment-input-row input{flex:1;border:1.5px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;outline:none;background:var(--surface-2)}
+    .comment-input-row input:focus{border-color:var(--primary)}
+    .comment-input-row button{padding:7px 14px;border-radius:20px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer}
 
     /* ============ CLOUD VIEW ============ */
     .storage-bar-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;
@@ -642,19 +654,52 @@ function renderHero(){
    RENDER: NEWS
    ============================================================ */
 function postCard(p){
-  const cat = POST_CATS[p.cat];
-  return `<div class="post">
+  const cat = POST_CATS[p.cat] || {label:p.cat, color:'var(--ink-soft)'};
+  return `<div class="post" data-post-id="${p.id}">
     <div class="post-head">
-      <div class="post-av" style="background:${p.color}">${p.author[0]}</div>
+      <div class="post-av" style="background:${cat.color}">${p.author[0]}</div>
       <div><div style="font-weight:600;font-size:13.5px;">${p.author}</div><div style="font-size:12px;color:var(--ink-soft)">${p.when}</div></div>
       <span class="post-tag" style="background:${cat.color}1a;color:${cat.color}">${cat.label}</span>
+      ${p.is_mine ? `<button class="post-del-btn" data-del-post="${p.id}" title="ลบโพสต์ของฉัน" style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--danger)">🗑️</button>` : ''}
     </div>
     <div class="post-body">${p.text}</div>
-    <div class="post-actions"><button>👍 ถูกใจ</button><button>💬 แสดงความเห็น</button><button>↗️ แชร์</button></div>
+    <div class="post-actions">
+      <button class="like-btn ${p.liked?'liked':''}" data-like="${p.id}" title="กดถูกใจ">
+        👍 ${p.liked?'ถูกใจแล้ว':'ถูกใจ'} <span class="like-count">${p.likes>0?'('+p.likes+')':''}</span>
+      </button>
+      <button class="comment-toggle-btn" data-comment-toggle="${p.id}" title="แสดงความเห็น">
+        💬 ความเห็น <span>${p.comments>0?'('+p.comments+')':''}</span>
+      </button>
+      <button onclick="navigator.share ? navigator.share({title:'NRW',text:'${p.text.slice(0,50)}...',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('คัดลอกลิงก์แล้ว'))" title="แชร์โพสต์">↗️ แชร์</button>
+    </div>
+    <div class="comment-section" id="comments-${p.id}">
+      <div class="comment-list" id="comment-list-${p.id}"></div>
+      <div class="comment-input-row">
+        <input type="text" placeholder="เขียนความเห็น…" id="comment-input-${p.id}">
+        <button onclick="submitComment(${p.id})">ส่ง</button>
+      </div>
+    </div>
   </div>`;
 }
-function renderHomeFeed(){
-  document.getElementById('homePostFeed').innerHTML = DataLayer.getPosts('all').slice(0,2).map(postCard).join('');
+
+// ── API: โหลดโพสต์จาก server ──────────────────────────────
+async function fetchPosts(cat='all'){
+  try{
+    const r = await fetch(`/news/posts?cat=${cat}&limit=50`);
+    const d = await r.json();
+    return d.posts || [];
+  } catch(e){ return []; }
+}
+
+async function renderNewsFeed(){
+  const list = await fetchPosts(State.newsFilter);
+  document.getElementById('newsFeed').innerHTML = list.length ? list.map(postCard).join('') :
+    `<p style="color:var(--ink-soft);font-size:14px;text-align:center;padding:30px;">ยังไม่มีประกาศในหมวดนี้</p>`;
+}
+
+async function renderHomeFeed(){
+  const list = await fetchPosts('all');
+  document.getElementById('homePostFeed').innerHTML = list.slice(0,3).map(postCard).join('');
 }
 function renderNewsComposerCats(){
   document.getElementById('newPostCatRow').innerHTML = Object.entries(POST_CATS).map(([k,c],i)=>
@@ -663,11 +708,6 @@ function renderNewsComposerCats(){
 function renderNewsFilters(){
   document.getElementById('newsFilterRow').innerHTML = `<span class="cat-chip ${State.newsFilter==='all'?'on':''}" data-filter="all" title="แสดงทุกหมวด">ทั้งหมด</span>` +
     Object.entries(POST_CATS).map(([k,c])=>`<span class="cat-chip ${State.newsFilter===k?'on':''}" data-filter="${k}" title="กรอง: ${c.label}">${c.label}</span>`).join('');
-}
-function renderNewsFeed(){
-  const list = DataLayer.getPosts(State.newsFilter);
-  document.getElementById('newsFeed').innerHTML = list.length ? list.map(postCard).join('') :
-    `<p style="color:var(--ink-soft);font-size:14px;text-align:center;padding:30px;">ยังไม่มีประกาศในหมวดนี้</p>`;
 }
 
 /* ============================================================
@@ -849,14 +889,92 @@ document.addEventListener('click', (e)=>{
   if(quickEl){ sendAIMessage(quickEl.dataset.quick); return; }
 });
 
-document.getElementById('submitPost').onclick = ()=>{
+document.getElementById('submitPost').onclick = async ()=>{
   const text = document.getElementById('newPostText').value.trim();
   if(!text) return;
   const cat = document.querySelector('#newPostCatRow .cat-chip.on')?.dataset.cat || 'announce';
-  DataLayer.addPost(text, cat);
-  document.getElementById('newPostText').value = '';
-  renderNewsFeed();
+  const btn = document.getElementById('submitPost');
+  btn.disabled = true; btn.textContent = 'กำลังโพสต์…';
+  try{
+    const r = await fetch('/news/posts', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, cat})
+    });
+    if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อนโพสต์'); window.location='/members/login'; return; }
+    if(!r.ok){ const e=await r.json(); alert(e.detail||'เกิดข้อผิดพลาด'); return; }
+    document.getElementById('newPostText').value = '';
+    await renderNewsFeed();
+  } finally{ btn.disabled=false; btn.textContent='โพสต์'; }
 };
+
+// ── Like ─────────────────────────────────────────────────────
+async function toggleLike(postId, btn){
+  const r = await fetch(`/news/posts/${postId}/like`, {method:'POST'});
+  if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return; }
+  const d = await r.json();
+  btn.classList.toggle('liked', d.liked);
+  btn.innerHTML = `👍 ${d.liked?'ถูกใจแล้ว':'ถูกใจ'} <span class="like-count">${d.likes>0?'('+d.likes+')':''}</span>`;
+}
+
+// ── Comments ──────────────────────────────────────────────────
+async function loadComments(postId){
+  const r = await fetch(`/news/posts/${postId}/comments`);
+  const d = await r.json();
+  const el = document.getElementById(`comment-list-${postId}`);
+  el.innerHTML = d.comments.length ? d.comments.map(c=>`
+    <div class="comment-item">
+      <div class="comment-av">${c.author[0]}</div>
+      <div class="comment-body">
+        <div class="comment-author">${c.author} · ${c.when}</div>
+        ${c.text}
+      </div>
+    </div>`).join('') : '<p style="font-size:12px;color:var(--ink-soft);padding:4px 0;">ยังไม่มีความเห็น</p>';
+}
+
+async function submitComment(postId){
+  const input = document.getElementById(`comment-input-${postId}`);
+  const text = input.value.trim();
+  if(!text) return;
+  const r = await fetch(`/news/posts/${postId}/comments`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({text})
+  });
+  if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return; }
+  input.value = '';
+  await loadComments(postId);
+  // อัปเดตตัวเลข comment
+  const toggleBtn = document.querySelector(`[data-comment-toggle="${postId}"] span`);
+  if(toggleBtn){
+    const d = await r.json();
+    const count = document.querySelectorAll(`#comment-list-${postId} .comment-item`).length;
+    toggleBtn.textContent = count > 0 ? `(${count})` : '';
+  }
+}
+
+// ── Event delegation: like + comment toggle + delete ─────────
+document.addEventListener('click', async e=>{
+  const likeBtn = e.target.closest('.like-btn[data-like]');
+  if(likeBtn){ await toggleLike(likeBtn.dataset.like, likeBtn); return; }
+
+  const toggleBtn = e.target.closest('.comment-toggle-btn[data-comment-toggle]');
+  if(toggleBtn){
+    const pid = toggleBtn.dataset.commentToggle;
+    const sec = document.getElementById(`comments-${pid}`);
+    const isOpen = sec.classList.toggle('open');
+    if(isOpen) await loadComments(pid);
+    return;
+  }
+
+  const delBtn = e.target.closest('[data-del-post]');
+  if(delBtn){
+    if(!confirm('ลบโพสต์นี้?')) return;
+    const r = await fetch(`/news/posts/${delBtn.dataset.delPost}`, {method:'DELETE'});
+    if(r.ok){ await renderNewsFeed(); await renderHomeFeed(); }
+    return;
+  }
+});
 
 document.getElementById('uploadBtn').onclick = ()=>{
   const current = State.cloudPath[State.cloudPath.length-1].id;
