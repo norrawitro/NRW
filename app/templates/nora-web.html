@@ -292,7 +292,7 @@
   <div class="header-right">
     <button class="chip wallet" data-view="wallet" title="กระเป๋าเงิน — ดูยอดและธุรกรรม"><span>💰</span><span id="walletChip">฿0</span></button>
     <button class="icon-btn" id="themeBtn" title="เปลี่ยนธีม สว่าง/มืด">🌙</button>
-    <div class="avatar" id="userAvatar" title="โปรไฟล์ของฉัน — คลิกเพื่อดูข้อมูลบัญชี">ก</div>
+    <div class="avatar" id="userAvatar" title="โปรไฟล์ของฉัน — คลิกเพื่อดูข้อมูลบัญชี" onclick="window.location.href='/members/profile'" style="cursor:pointer">ก</div>
   </div>
 </header>
 
@@ -513,8 +513,8 @@ const MODULES = [
 ];
 
 const META_ITEMS = [
-  {id:'profile', label:'ตั้งค่าสมาชิก', icon:'👤'},
-  {id:'help', label:'คู่มือการใช้งาน', icon:'❓'},
+  {id:'profile', label:'ตั้งค่าสมาชิก', icon:'👤', href:'/members/profile'},
+  {id:'help',    label:'คู่มือการใช้งาน', icon:'❓', href:'#'},
 ];
 
 const POST_CATS = {
@@ -607,7 +607,8 @@ function renderSidebar(){
   });
   html += `<div class="nav-group-label">บัญชีของฉัน</div>`;
   META_ITEMS.forEach(m=>{
-    html += `<a href="#" class="nav-item" title="${m.icon} ${m.label}"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">${m.icon}</span>${m.label}</a>`;
+    const isLink = m.href && m.href !== '#';
+    html += `<a ${isLink ? `href="${m.href}"` : 'href="#"'} class="nav-item" title="${m.icon} ${m.label}"${isLink ? '' : ''}><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">${m.icon}</span>${m.label}</a>`;
   });
   document.getElementById('sidebar').innerHTML = html;
 }
