@@ -286,13 +286,13 @@
 
 <!-- HEADER -->
 <header class="header">
-  <button class="hamburger" id="hamburger"><span></span></button>
-  <a href="#" class="brand" data-view="home"><div class="brand-mark">S</div><div class="brand-name">Nora<span>-Web</span></div></a>
-  <div class="search"><span>🔍</span><input type="text" placeholder="ค้นหาทุกอย่าง…"></div>
+  <button class="hamburger" id="hamburger" title="เปิด/ปิด เมนูด้านข้าง"><span></span></button>
+  <a href="#" class="brand" data-view="home" title="กลับหน้าแรก Nora-Web"><div class="brand-mark">S</div><div class="brand-name">Nora<span>-Web</span></div></a>
+  <div class="search"><span>🔍</span><input type="text" placeholder="ค้นหาทุกอย่าง…" title="ค้นหาระบบ บริการ หรือข้อมูลทั้งหมด"></div>
   <div class="header-right">
     <button class="chip wallet" data-view="wallet" title="กระเป๋าเงิน — ดูยอดและธุรกรรม"><span>💰</span><span id="walletChip">฿0</span></button>
     <button class="icon-btn" id="themeBtn" title="เปลี่ยนธีม สว่าง/มืด">🌙</button>
-    <div class="avatar" id="userAvatar">ก</div>
+    <div class="avatar" id="userAvatar" title="โปรไฟล์ของฉัน — คลิกเพื่อดูข้อมูลบัญชี">ก</div>
   </div>
 </header>
 
@@ -322,8 +322,8 @@
             <div class="launcher-head"><h3>ระบบสมาชิก</h3></div>
             <p style="font-size:14px; color:var(--ink-soft);">เข้าสู่ระบบเพื่อใช้งาน POS และบริการทั้งหมด</p>
             <div style="margin-top:10px; display:flex; gap:8px;">
-              <a href="/members/login" class="btn-primary" style="padding:7px 14px; font-size:13px;">🔑 เข้าสู่ระบบ</a>
-              <a href="/members/register" style="color:var(--primary); font-size:13px; font-weight:600;">สมัครสมาชิก</a>
+              <a href="/members/login" class="btn-primary" style="padding:7px 14px; font-size:13px;" title="เข้าสู่ระบบด้วย username และรหัสผ่าน">🔑 เข้าสู่ระบบ</a>
+              <a href="/members/register" style="color:var(--primary); font-size:13px; font-weight:600;" title="สมัครสมาชิกใหม่ — ฟรี">สมัครสมาชิก</a>
             </div>
           </div>
         </section>
@@ -347,10 +347,10 @@
       <!-- FOOTER -->
       <footer class="footer">
         <div class="foot-grid">
-          <div><h4>เกี่ยวกับ</h4><a href="#">เกี่ยวกับNora-Web</a><a href="#">นโยบายความเป็นส่วนตัว</a><a href="#">เงื่อนไขการใช้งาน</a></div>
-          <div><h4>บริการ</h4><a data-view="wallet">ระบบจุดขาย (POS)</a><a data-view="cloud">คลาวด์ส่วนตัว</a><a data-view="ai">ศูนย์ AI</a></div>
-          <div><h4>ช่วยเหลือ</h4><a href="#">คู่มือการใช้งาน</a><a href="#">ติดต่อทีมงาน</a></div>
-          <div><h4>ติดตาม</h4><a href="#">ช่องทางติดต่อ</a></div>
+          <div><h4>เกี่ยวกับ</h4><a href="#" title="เรียนรู้เพิ่มเติมเกี่ยวกับ Nora-Web">เกี่ยวกับNora-Web</a><a href="#" title="นโยบายความเป็นส่วนตัวของเรา">นโยบายความเป็นส่วนตัว</a><a href="#" title="เงื่อนไขและข้อตกลงการใช้งาน">เงื่อนไขการใช้งาน</a></div>
+          <div><h4>บริการ</h4><a data-view="wallet" title="ไปยังระบบจุดขาย POS">ระบบจุดขาย (POS)</a><a data-view="cloud" title="ไปยังคลาวด์ส่วนตัว">คลาวด์ส่วนตัว</a><a data-view="ai" title="ไปยังศูนย์ AI">ศูนย์ AI</a></div>
+          <div><h4>ช่วยเหลือ</h4><a href="#" title="คู่มือการใช้งาน Nora-Web">คู่มือการใช้งาน</a><a href="#" title="ติดต่อทีมงาน Nora-Web">ติดต่อทีมงาน</a></div>
+          <div><h4>ติดตาม</h4><a href="#" title="ช่องทางติดต่อและโซเชียล">ช่องทางติดต่อ</a></div>
         </div>
         <div class="foot-bottom">
           <span>© 2569 Nora-Web — แพลตฟอร์มรวมทุกบริการ</span>
@@ -362,7 +362,7 @@
     <!-- ============ VIEW: NEWS ============ -->
     <div class="view-section hidden" id="view-news">
       <div class="view-header">
-        <a class="back-link" data-view="home">← หน้าแรก</a>
+        <a class="back-link" data-view="home" title="กลับหน้าแรก">← หน้าแรก</a>
         <div><div class="view-title">📰 ข่าวสาร/ประกาศ <span style="font-size:11px;font-weight:700;color:var(--phase1);background:rgba(239,68,68,.1);padding:2px 8px;border-radius:999px;">รหัส 1 · ช่วงที่ 1</span></div>
           <div class="view-sub">หน้าแรก + สื่อสารภายใน — จุดเริ่มต้นที่ทุกระบบเชื่อมมาปล่อยประกาศ</div></div>
       </div>
@@ -374,7 +374,7 @@
         </div>
         <div class="composer-actions">
           <div class="chip-row" id="newPostCatRow"></div>
-          <button class="btn-primary" id="submitPost">โพสต์</button>
+          <button class="btn-primary" id="submitPost" title="กดเพื่อโพสต์ประกาศ">โพสต์</button>
         </div>
       </div>
 
@@ -385,7 +385,7 @@
     <!-- ============ VIEW: CLOUD ============ -->
     <div class="view-section hidden" id="view-cloud">
       <div class="view-header">
-        <a class="back-link" data-view="home">← หน้าแรก</a>
+        <a class="back-link" data-view="home" title="กลับหน้าแรก">← หน้าแรก</a>
         <div><div class="view-title">☁️ จัดการข้อมูล/คลาวด์ <span style="font-size:11px;font-weight:700;color:var(--phase1);background:rgba(239,68,68,.1);padding:2px 8px;border-radius:999px;">รหัส 2 · ช่วงที่ 1</span></div>
           <div class="view-sub">ที่เก็บไฟล์/เอกสารกลาง — ทุกระบบใช้ร่วมกัน</div></div>
       </div>
@@ -400,8 +400,8 @@
 
       <div class="breadcrumb" id="cloudBreadcrumb"></div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-        <button class="btn-ghost" id="newFolderBtn">📁 โฟลเดอร์ใหม่</button>
-        <button class="btn-primary" id="uploadBtn" style="margin-left:8px;">⬆️ อัปโหลดไฟล์</button>
+        <button class="btn-ghost" id="newFolderBtn" title="สร้างโฟลเดอร์ใหม่">📁 โฟลเดอร์ใหม่</button>
+        <button class="btn-primary" id="uploadBtn" style="margin-left:8px;" title="อัปโหลดไฟล์ไปยังโฟลเดอร์นี้">⬆️ อัปโหลดไฟล์</button>
       </div>
       <div class="file-grid" id="fileGrid"></div>
     </div>
@@ -409,7 +409,7 @@
     <!-- ============ VIEW: WALLET ============ -->
     <div class="view-section hidden" id="view-wallet">
       <div class="view-header">
-        <a class="back-link" data-view="home">← หน้าแรก</a>
+        <a class="back-link" data-view="home" title="กลับหน้าแรก">← หน้าแรก</a>
         <div><div class="view-title">💳 การเงิน/กระเป๋าเงินกลาง <span style="font-size:11px;font-weight:700;color:var(--phase1);background:rgba(239,68,68,.1);padding:2px 8px;border-radius:999px;">รหัส 7 · ช่วงที่ 1</span></div>
           <div class="view-sub">ระบบชำระเงินกลาง — ทุกธุรกิจในแพลตฟอร์มอาศัยระบบนี้</div></div>
       </div>
@@ -427,12 +427,12 @@
           <div class="ws-card">
             <h4 style="font-size:13.5px;margin-bottom:4px;">จัดการยอดเงิน</h4>
             <div class="wallet-actions">
-              <button class="btn-primary" id="topupBtn" style="flex:1;">➕ เติมเงิน</button>
-              <button class="btn-ghost" id="withdrawBtn" style="flex:1;">➖ ถอนเงิน</button>
+              <button class="btn-primary" id="topupBtn" style="flex:1;" title="เติมเงินเข้ากระเป๋า">➕ เติมเงิน</button>
+              <button class="btn-ghost" id="withdrawBtn" style="flex:1;" title="ถอนเงินออกจากกระเป๋า">➖ ถอนเงิน</button>
             </div>
             <div class="inline-form hidden" id="txForm">
-              <input type="number" id="txAmount" placeholder="จำนวนเงิน (บาท)">
-              <button class="btn-primary" id="txConfirm">ยืนยัน</button>
+              <input type="number" id="txAmount" placeholder="จำนวนเงิน (บาท)" title="ใส่จำนวนเงินที่ต้องการ">
+              <button class="btn-primary" id="txConfirm" title="ยืนยันรายการ">ยืนยัน</button>
             </div>
           </div>
         </div>
@@ -449,7 +449,7 @@
     <!-- ============ VIEW: AI ============ -->
     <div class="view-section hidden" id="view-ai">
       <div class="view-header">
-        <a class="back-link" data-view="home">← หน้าแรก</a>
+        <a class="back-link" data-view="home" title="กลับหน้าแรก">← หน้าแรก</a>
         <div><div class="view-title">🤖 ศูนย์ AI/บอทอัตโนมัติ <span style="font-size:11px;font-weight:700;color:var(--phase1);background:rgba(239,68,68,.1);padding:2px 8px;border-radius:999px;">รหัส 11 · ช่วงที่ 1</span></div>
           <div class="view-sub">ตัวช่วยกลาง — ประมวลผล แจ้งเตือน และเชื่อมข้อมูลจากทุกระบบ</div></div>
       </div>
@@ -458,8 +458,8 @@
         <div class="ai-messages" id="aiMessages"></div>
         <div class="ai-quick" id="aiQuick"></div>
         <div class="ai-input-row">
-          <input type="text" id="aiInput" placeholder="พิมพ์คำถาม… เช่น เช็คยอดเงิน, มีไฟล์ใหม่ไหม">
-          <button class="btn-primary" id="aiSend">ส่ง</button>
+          <input type="text" id="aiInput" placeholder="พิมพ์คำถาม… เช่น เช็คยอดเงิน, มีไฟล์ใหม่ไหม" title="พิมพ์คำสั่งหรือคำถามถึง AI">
+          <button class="btn-primary" id="aiSend" title="ส่งข้อความถึง AI">ส่ง</button>
         </div>
       </div>
     </div>
@@ -470,7 +470,7 @@
 <!-- MODULE DETAIL DRAWER (สำหรับระบบที่ยังไม่เปิดใช้งาน) -->
 <div class="overlay" id="drawerOverlay"></div>
 <div class="drawer" id="moduleDrawer">
-  <button class="drawer-close" id="drawerClose">✕</button>
+  <button class="drawer-close" id="drawerClose" title="ปิดหน้าต่างรายละเอียด">✕</button>
   <div id="drawerContent"></div>
 </div>
 
@@ -657,11 +657,11 @@ function renderHomeFeed(){
 }
 function renderNewsComposerCats(){
   document.getElementById('newPostCatRow').innerHTML = Object.entries(POST_CATS).map(([k,c],i)=>
-    `<span class="cat-chip ${i===0?'on':''}" data-cat="${k}">${c.label}</span>`).join('');
+    `<span class="cat-chip ${i===0?'on':''}" data-cat="${k}" title="หมวด: ${c.label}">${c.label}</span>`).join('');
 }
 function renderNewsFilters(){
-  document.getElementById('newsFilterRow').innerHTML = `<span class="cat-chip ${State.newsFilter==='all'?'on':''}" data-filter="all">ทั้งหมด</span>` +
-    Object.entries(POST_CATS).map(([k,c])=>`<span class="cat-chip ${State.newsFilter===k?'on':''}" data-filter="${k}">${c.label}</span>`).join('');
+  document.getElementById('newsFilterRow').innerHTML = `<span class="cat-chip ${State.newsFilter==='all'?'on':''}" data-filter="all" title="แสดงทุกหมวด">ทั้งหมด</span>` +
+    Object.entries(POST_CATS).map(([k,c])=>`<span class="cat-chip ${State.newsFilter===k?'on':''}" data-filter="${k}" title="กรอง: ${c.label}">${c.label}</span>`).join('');
 }
 function renderNewsFeed(){
   const list = DataLayer.getPosts(State.newsFilter);
@@ -784,7 +784,7 @@ function openDrawer(moduleId){
     <p>${m.reason}</p>
     <h4>เชื่อมโยงกับระบบ</h4>
     <div class="conn-list">${m.conn.map(c=>`<span>🔗 ${c}</span>`).join('')}</div>
-    <button class="follow-btn ${followed?'on':''}" id="followBtn">${followed?'✓ ติดตามแล้ว':'🔔 แจ้งเตือนเมื่อพร้อมใช้งาน'}</button>
+    <button class="follow-btn ${followed?'on':''}" id="followBtn" title="${followed?'คลิกเพื่อยกเลิกการติดตาม':'คลิกเพื่อรับแจ้งเตือนเมื่อระบบนี้พร้อมใช้งาน'}">${followed?'✓ ติดตามแล้ว':'🔔 แจ้งเตือนเมื่อพร้อมใช้งาน'}</button>
   `;
   document.getElementById('followBtn').onclick = ()=>{
     State.followed[m.id] = !State.followed[m.id];
