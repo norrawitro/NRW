@@ -64,6 +64,22 @@
       border-radius:999px;background:var(--surface-2);border:1px solid var(--line);
       font-weight:600;font-size:13px;white-space:nowrap;}
     .chip.wallet{color:var(--gold)}
+    /* ── Tooltip ────────────────────────────────────────── */
+    [title]{position:relative}
+    [title]:hover::after{
+      content:attr(title);
+      position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+      background:rgba(22,24,43,.88);color:#fff;font-size:12px;font-weight:500;
+      white-space:nowrap;padding:5px 10px;border-radius:8px;pointer-events:none;
+      z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.25);
+      animation:tipIn .15s ease;
+    }
+    [title]:hover::before{
+      content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
+      border:5px solid transparent;border-top-color:rgba(22,24,43,.88);pointer-events:none;z-index:9999;
+    }
+    @keyframes tipIn{from{opacity:0;transform:translateX(-50%) translateY(4px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    /* ── End Tooltip ─────────────────────────────────────── */
     .icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
       background:var(--surface-2);border:1px solid var(--line);font-size:17px;}
     .avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
@@ -274,8 +290,8 @@
   <a href="#" class="brand" data-view="home"><div class="brand-mark">S</div><div class="brand-name">Nora<span>-Web</span></div></a>
   <div class="search"><span>🔍</span><input type="text" placeholder="ค้นหาทุกอย่าง…"></div>
   <div class="header-right">
-    <button class="chip wallet" data-view="wallet"><span>💰</span><span id="walletChip">฿0</span></button>
-    <button class="icon-btn" id="themeBtn">🌙</button>
+    <button class="chip wallet" data-view="wallet" title="กระเป๋าเงิน — ดูยอดและธุรกรรม"><span>💰</span><span id="walletChip">฿0</span></button>
+    <button class="icon-btn" id="themeBtn" title="เปลี่ยนธีม สว่าง/มืด">🌙</button>
     <div class="avatar" id="userAvatar">ก</div>
   </div>
 </header>
@@ -577,13 +593,13 @@ const DataLayer = {
    RENDER: SIDEBAR
    ============================================================ */
 function renderSidebar(){
-  let html = `<a href="#" class="nav-item ${State.view==='home'?'active':''}" data-view="home"><span class="ic" style="background:var(--primary-soft);color:var(--primary)">🏠</span>หน้าแรก</a>`;
+  let html = `<a href="#" class="nav-item ${State.view==='home'?'active':''}" data-view="home" title="🏠 หน้าแรก — ภาพรวมทั้งหมด"><span class="ic" style="background:var(--primary-soft);color:var(--primary)">🏠</span>หน้าแรก</a>`;
   [1,2,3,4].forEach(phase=>{
     const items = MODULES.filter(m=>m.phase===phase);
     html += `<div class="nav-group-label"><span class="phase-dot" style="background:${PHASES[phase].color}"></span>${PHASES[phase].label}</div>`;
     items.forEach(m=>{
       const locked = phase!==1;
-      html += `<a href="#" class="nav-item ${locked?'locked':''} ${State.view===m.view?'active':''}" data-module="${m.id}">
+      html += `<a href="#" class="nav-item ${locked?'locked':''} ${State.view===m.view?'active':''}" data-module="${m.id}" title="${m.icon} ${m.label}${locked?' (ยังไม่เปิด)':''} — ${m.reason||''}">
         <span class="ic" style="background:${PHASES[phase].color}1a;color:${PHASES[phase].color}">${m.icon}</span>${m.label}
         ${locked?'<span class="soon">เร็วๆ นี้</span>':''}
       </a>`;
@@ -591,7 +607,7 @@ function renderSidebar(){
   });
   html += `<div class="nav-group-label">บัญชีของฉัน</div>`;
   META_ITEMS.forEach(m=>{
-    html += `<a href="#" class="nav-item"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">${m.icon}</span>${m.label}</a>`;
+    html += `<a href="#" class="nav-item" title="${m.icon} ${m.label}"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">${m.icon}</span>${m.label}</a>`;
   });
   document.getElementById('sidebar').innerHTML = html;
 }
@@ -604,7 +620,7 @@ function renderPhaseLegend(){
 function renderLauncher(){
   document.getElementById('appGrid').innerHTML = MODULES.map(m=>{
     const locked = m.phase!==1;
-    return `<a href="#" class="app ${locked?'locked':''}" data-module="${m.id}">
+    return `<a href="#" class="app ${locked?'locked':''}" data-module="${m.id}" title="${m.icon} ${m.label}${locked?' — ยังไม่เปิด (เร็วๆ นี้)':''}\n${m.reason||''}">
       <div class="tile" style="background:${PHASES[m.phase].color}">${m.icon}${locked?'<span class="lock-badge">🔒</span>':''}</div>
       <div class="name">${m.label}</div>
     </a>`;
@@ -669,8 +685,8 @@ function renderFileGrid(){
   const current = State.cloudPath[State.cloudPath.length-1].id;
   const items = DataLayer.getCloudItems(current);
   document.getElementById('fileGrid').innerHTML = items.length ? items.map(it=>`
-    <div class="file-card" data-item="${it.id}" data-type="${it.type}">
-      <button class="del" data-del="${it.id}">🗑️</button>
+    <div class="file-card" data-item="${it.id}" data-type="${it.type}" title="${it.icon} ${it.name}${it.type==='folder'?' (โฟลเดอร์ '+it.count+' ไฟล์)':' ('+it.size+')'}">
+      <button class="del" data-del="${it.id}" title="ลบ ${it.name}">🗑️</button>
       <div class="fic">${it.icon}</div>
       <div class="fn">${it.name}</div>
       <div class="fm">${it.type==='folder' ? (it.count+' ไฟล์') : it.size}</div>
@@ -760,7 +776,7 @@ function openDrawer(moduleId){
   if(!m) return;
   const followed = !!State.followed[m.id];
   document.getElementById('drawerContent').innerHTML = `
-    <div class="dtile" style="background:${PHASES[m.phase].color}">${m.icon}</div>
+    <div class="dtile" style="background:${PHASES[m.phase].color}" title="${m.icon} ${m.label}">${m.icon}</div>
     <h3>${m.label}</h3>
     <div class="code">รหัสระบบ #${m.code}</div>
     <span class="phase-pill" style="background:${PHASES[m.phase].color}1a;color:${PHASES[m.phase].color}">${PHASES[m.phase].dot} ${PHASES[m.phase].label}</span>
