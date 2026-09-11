@@ -6,56 +6,411 @@
   <title>โปรไฟล์ — NRW</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Segoe UI',Arial,sans-serif;background:#EEF1F8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:40px 36px;width:100%;max-width:480px}
-    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
-    .header h1{font-size:1.3rem;color:#16182B;font-weight:700}
-    .avatar{width:64px;height:64px;border-radius:50%;background:#4F46E5;color:#fff;font-size:1.6rem;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-    .name{text-align:center;font-size:1.2rem;font-weight:700;color:#16182B}
-    .username-tag{text-align:center;color:#4F46E5;font-size:.9rem;margin-top:4px;margin-bottom:24px}
-    .info-grid{display:grid;gap:12px}
-    .info-row{display:flex;border-bottom:1px solid #f3f4f6;padding-bottom:12px;gap:12px}
-    .info-label{font-size:.82rem;font-weight:600;color:#9ca3af;min-width:110px}
-    .info-value{font-size:.92rem;color:#374151;word-break:break-all}
-    .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+    :root{
+      --bg:#EEF1F8;--surface:#fff;--surface-2:#F7F8FC;
+      --ink:#16182B;--ink-soft:#5B5F76;--line:#E3E6F0;
+      --primary:#4F46E5;--primary-soft:#EEF0FF;
+      --emerald:#10B981;--danger:#EF4444;--gold:#F59E0B;
+      --violet:#8B5CF6;--cyan:#06B6D4;
+      --radius:14px;--shadow:0 4px 24px rgba(0,0,0,.08);
+    }
+    body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+
+    /* ── HEADER ── */
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;
+      background:rgba(255,255,255,.85);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+    .topbar-brand{font-size:1.1rem;font-weight:700;color:var(--primary);text-decoration:none}
+    .topbar-right{display:flex;gap:10px;align-items:center}
+    .btn-sm{padding:7px 16px;border-radius:8px;font-size:.83rem;font-weight:600;
+      text-decoration:none;border:none;cursor:pointer;transition:all .2s}
+    .btn-home{background:var(--primary-soft);color:var(--primary)}
+    .btn-home:hover{background:#dde0ff}
+    .btn-logout{background:#fef2f2;color:var(--danger)}
+    .btn-logout:hover{background:#fde8e8}
+
+    /* ── LAYOUT ── */
+    .page{max-width:900px;margin:32px auto;padding:0 16px;display:grid;
+      grid-template-columns:260px 1fr;gap:20px}
+    @media(max-width:680px){.page{grid-template-columns:1fr}}
+
+    /* ── SIDEBAR CARD ── */
+    .profile-card{background:var(--surface);border-radius:var(--radius);
+      box-shadow:var(--shadow);padding:28px 20px;text-align:center;height:fit-content;position:sticky;top:76px}
+    .avatar-wrap{position:relative;display:inline-block;margin-bottom:14px}
+    .avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--violet));
+      color:#fff;font-size:2rem;font-weight:700;display:flex;align-items:center;justify-content:center;
+      margin:0 auto;box-shadow:0 4px 16px rgba(79,70,229,.3)}
+    .avatar-badge{position:absolute;bottom:2px;right:2px;width:20px;height:20px;border-radius:50%;
+      background:var(--emerald);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px}
+    .profile-name{font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:3px}
+    .profile-username{font-size:.85rem;color:var(--primary);font-weight:600;margin-bottom:14px}
+    .profile-meta{display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:18px}
+    .meta-row{display:flex;gap:8px;align-items:flex-start;font-size:.82rem;color:var(--ink-soft)}
+    .meta-row .ico{font-size:14px;min-width:18px}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+    .stat-box{background:var(--surface-2);border-radius:10px;padding:10px 8px;text-align:center}
+    .stat-num{font-size:1.3rem;font-weight:700;color:var(--primary)}
+    .stat-lbl{font-size:.72rem;color:var(--ink-soft);margin-top:2px}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;margin:2px}
     .badge-active{background:#d1fae5;color:#065f46}
     .badge-admin{background:#ede9fe;color:#5b21b6}
-    .btn-home{display:block;text-align:center;margin-top:28px;padding:10px;background:#4F46E5;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem;transition:background .2s}
-    .btn-home:hover{background:#4338ca}
-    .btn-logout{display:block;text-align:center;margin-top:10px;padding:10px;background:#ef4444;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:.9rem;transition:background .2s}
-    .btn-logout:hover{background:#dc2626}
+    .badge-member{background:var(--primary-soft);color:var(--primary)}
+
+    /* ── MAIN CONTENT ── */
+    .main-col{display:flex;flex-direction:column;gap:16px}
+
+    /* ── TABS ── */
+    .tabs{display:flex;gap:4px;background:var(--surface);border-radius:var(--radius);
+      padding:6px;box-shadow:var(--shadow);overflow-x:auto}
+    .tab{padding:8px 16px;border-radius:10px;font-size:.83rem;font-weight:600;
+      color:var(--ink-soft);cursor:pointer;border:none;background:none;white-space:nowrap;transition:all .2s}
+    .tab.active{background:var(--primary);color:#fff}
+    .tab:hover:not(.active){background:var(--surface-2)}
+
+    /* ── SECTION CARD ── */
+    .sec{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+      padding:22px;display:none}
+    .sec.active{display:block}
+    .sec-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+      color:var(--ink-soft);margin-bottom:16px;display:flex;align-items:center;gap:6px}
+    .sec-title::before{content:'';width:14px;height:3px;border-radius:2px;background:var(--primary)}
+
+    /* ── ข้อมูลส่วนตัว ── */
+    .info-grid{display:grid;gap:0}
+    .info-row{display:flex;padding:11px 0;border-bottom:1px solid var(--line);gap:12px;align-items:center}
+    .info-row:last-child{border-bottom:none}
+    .info-label{font-size:.78rem;font-weight:600;color:var(--ink-soft);min-width:120px}
+    .info-value{font-size:.9rem;color:var(--ink);flex:1}
+    .edit-btn{padding:4px 12px;border-radius:6px;font-size:.75rem;font-weight:600;
+      background:var(--primary-soft);color:var(--primary);border:none;cursor:pointer}
+
+    /* ── การตั้งค่า ── */
+    .settings-group{margin-bottom:20px}
+    .settings-group h4{font-size:.82rem;font-weight:700;color:var(--ink-soft);
+      text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
+    .setting-row{display:flex;justify-content:space-between;align-items:center;
+      padding:12px 0;border-bottom:1px solid var(--line)}
+    .setting-row:last-child{border-bottom:none}
+    .setting-info h5{font-size:.88rem;font-weight:600;color:var(--ink);margin-bottom:2px}
+    .setting-info p{font-size:.78rem;color:var(--ink-soft)}
+    .toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .slider{position:absolute;inset:0;background:#e5e7eb;border-radius:999px;cursor:pointer;transition:.3s}
+    .slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;
+      background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+    .toggle input:checked+.slider{background:var(--primary)}
+    .toggle input:checked+.slider::before{transform:translateX(18px)}
+
+    /* ── โพสต์ ── */
+    .post-card{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+    .post-card:last-child{margin-bottom:0}
+    .post-header{display:flex;justify-content:space-between;margin-bottom:8px}
+    .post-cat{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;
+      background:var(--primary-soft);color:var(--primary)}
+    .post-date{font-size:.75rem;color:var(--ink-soft)}
+    .post-text{font-size:.88rem;color:var(--ink);line-height:1.6}
+    .post-footer{display:flex;gap:12px;margin-top:10px}
+    .post-stat{font-size:.75rem;color:var(--ink-soft);display:flex;align-items:center;gap:4px}
+    .empty-state{text-align:center;padding:40px 20px;color:var(--ink-soft);font-size:.9rem}
+    .empty-state .empty-ico{font-size:2.5rem;margin-bottom:10px}
+
+    /* ── ประวัติการใช้งาน ── */
+    .history-list{display:flex;flex-direction:column;gap:10px}
+    .history-item{display:flex;align-items:center;gap:12px;padding:10px;
+      background:var(--surface-2);border-radius:10px}
+    .history-ico{width:36px;height:36px;border-radius:10px;display:flex;
+      align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .history-info{flex:1}
+    .history-info h5{font-size:.85rem;font-weight:600;color:var(--ink);margin-bottom:2px}
+    .history-info p{font-size:.75rem;color:var(--ink-soft)}
+    .history-time{font-size:.72rem;color:var(--ink-soft);white-space:nowrap}
+
+    /* ── ฟีเจอร์ที่ใช้บ่อย ── */
+    .quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .quick-card{background:var(--surface-2);border:2px solid transparent;border-radius:12px;
+      padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;text-decoration:none;
+      display:block}
+    .quick-card:hover{border-color:var(--primary);background:var(--primary-soft)}
+    .quick-ico{font-size:1.8rem;margin-bottom:8px}
+    .quick-name{font-size:.82rem;font-weight:600;color:var(--ink);margin-bottom:3px}
+    .quick-use{font-size:.72rem;color:var(--ink-soft)}
+    .quick-bar{height:4px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}
+    .quick-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--violet));border-radius:2px}
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="avatar">{{ user.full_name[0].upper() }}</div>
-    <div class="name">{{ user.full_name }}</div>
-    <div class="username-tag">@{{ user.username }}</div>
 
-    <div class="info-grid">
-      <div class="info-row">
-        <span class="info-label">Email</span>
-        <span class="info-value">{{ user.email }}</span>
+<!-- TOPBAR -->
+<header class="topbar">
+  <a href="/nora-web" class="topbar-brand">🌐 Nora-Web</a>
+  <div class="topbar-right">
+    <a href="/nora-web" class="btn-sm btn-home" title="กลับหน้าหลัก">🏠 หน้าหลัก</a>
+    <a href="/members/logout" class="btn-sm btn-logout" title="ออกจากระบบ">🚪 ออก</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- SIDEBAR: โปรไฟล์การ์ด -->
+  <aside>
+    <div class="profile-card">
+      <div class="avatar-wrap">
+        <div class="avatar">{{ user.full_name[0].upper() }}</div>
+        <div class="avatar-badge" title="ออนไลน์">✓</div>
       </div>
-      <div class="info-row">
-        <span class="info-label">เบอร์โทร</span>
-        <span class="info-value">{{ user.phone or '—' }}</span>
+      <div class="profile-name">{{ user.full_name }}</div>
+      <div class="profile-username">@{{ user.username }}</div>
+
+      <div>
+        {% if user.is_active %}<span class="badge badge-active">✓ Active</span>{% endif %}
+        {% if user.is_admin %}<span class="badge badge-admin">⚡ Admin</span>{% endif %}
+        {% if not user.is_admin %}<span class="badge badge-member">👤 สมาชิก</span>{% endif %}
       </div>
-      <div class="info-row">
-        <span class="info-label">สถานะ</span>
-        <span class="info-value">
-          {% if user.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge" style="background:#fee2e2;color:#991b1b">Inactive</span>{% endif %}
-          {% if user.is_admin %}<span class="badge badge-admin" style="margin-left:6px">Admin</span>{% endif %}
-        </span>
+
+      <div class="divider"></div>
+
+      <div class="profile-meta">
+        <div class="meta-row"><span class="ico">📧</span><span>{{ user.email }}</span></div>
+        <div class="meta-row"><span class="ico">📱</span><span>{{ user.phone or '—' }}</span></div>
+        <div class="meta-row"><span class="ico">📅</span><span>สมัคร {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else '—' }}</span></div>
       </div>
-      <div class="info-row">
-        <span class="info-label">สมัครเมื่อ</span>
-        <span class="info-value">{{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else '—' }}</span>
+
+      <div class="divider"></div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-num">0</div>
+          <div class="stat-lbl">โพสต์</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">0</div>
+          <div class="stat-lbl">วันที่ใช้งาน</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">฿0</div>
+          <div class="stat-lbl">ยอดเงิน</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">0</div>
+          <div class="stat-lbl">โทเคน</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-col">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" data-tab="info" title="ข้อมูลส่วนตัว">👤 ข้อมูลส่วนตัว</button>
+      <button class="tab" data-tab="settings" title="การตั้งค่า">⚙️ การตั้งค่า</button>
+      <button class="tab" data-tab="posts" title="โพสต์ของฉัน">📰 โพสต์ของฉัน</button>
+      <button class="tab" data-tab="history" title="ประวัติการใช้งาน">🕐 ประวัติ</button>
+      <button class="tab" data-tab="quick" title="ฟีเจอร์ที่ใช้บ่อย">⚡ ใช้บ่อย</button>
+    </div>
+
+    <!-- TAB: ข้อมูลส่วนตัว -->
+    <div class="sec active" id="tab-info">
+      <div class="sec-title">👤 ข้อมูลส่วนตัว</div>
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">ชื่อ-นามสกุล</span>
+          <span class="info-value">{{ user.full_name }}</span>
+          <button class="edit-btn" title="แก้ไขชื่อ">✏️ แก้ไข</button>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Username</span>
+          <span class="info-value">@{{ user.username }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value">{{ user.email }}</span>
+          <button class="edit-btn" title="แก้ไข Email">✏️ แก้ไข</button>
+        </div>
+        <div class="info-row">
+          <span class="info-label">เบอร์โทรศัพท์</span>
+          <span class="info-value">{{ user.phone or '—' }}</span>
+          <button class="edit-btn" title="แก้ไขเบอร์โทร">✏️ แก้ไข</button>
+        </div>
+        <div class="info-row">
+          <span class="info-label">รหัสผ่าน</span>
+          <span class="info-value">••••••••</span>
+          <button class="edit-btn" title="เปลี่ยนรหัสผ่าน">🔑 เปลี่ยน</button>
+        </div>
+        <div class="info-row">
+          <span class="info-label">สถานะบัญชี</span>
+          <span class="info-value">
+            {% if user.is_active %}<span class="badge badge-active">✓ ใช้งานได้</span>{% else %}<span class="badge" style="background:#fee2e2;color:#991b1b">ถูกระงับ</span>{% endif %}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ประเภทบัญชี</span>
+          <span class="info-value">
+            {% if user.is_admin %}<span class="badge badge-admin">⚡ Admin</span>{% else %}<span class="badge badge-member">👤 สมาชิกทั่วไป</span>{% endif %}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">สมัครเมื่อ</span>
+          <span class="info-value">{{ user.created_at.strftime('%d/%m/%Y เวลา %H:%M น.') if user.created_at else '—' }}</span>
+        </div>
       </div>
     </div>
 
-    <a href="/nora-web" class="btn-home">🏠 กลับหน้าหลัก</a>
-    <a href="/members/logout" class="btn-logout">🚪 ออกจากระบบ</a>
-  </div>
+    <!-- TAB: การตั้งค่า -->
+    <div class="sec" id="tab-settings">
+      <div class="sec-title">⚙️ การตั้งค่าส่วนตัว</div>
+
+      <div class="settings-group">
+        <h4>🔔 การแจ้งเตือน</h4>
+        <div class="setting-row">
+          <div class="setting-info">
+            <h5>แจ้งเตือนข่าวสารใหม่</h5>
+            <p>รับการแจ้งเตือนเมื่อมีประกาศหรือข่าวสารใหม่</p>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <h5>แจ้งเตือนธุรกรรม</h5>
+            <p>รับการแจ้งเตือนทุกครั้งที่มีการเคลื่อนไหวในกระเป๋าเงิน</p>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <h5>แจ้งเตือนระบบใหม่</h5>
+            <p>รับการแจ้งเตือนเมื่อมีระบบที่ติดตามพร้อมใช้งาน</p>
+          </div>
+          <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h4>🎨 การแสดงผล</h4>
+        <div class="setting-row">
+          <div class="setting-info">
+            <h5>โหมดกลางคืน</h5>
+            <p>เปลี่ยนธีมเป็นสีเข้มเพื่อถนอมสายตา</p>
+          </div>
+          <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <h5>ภาษา</h5>
+            <p>ภาษาที่ใช้แสดงผลในระบบ</p>
+          </div>
+          <select style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--line);font-size:.83rem;background:var(--surface-2);color:var(--ink)">
+            <option>🇹🇭 ภาษาไทย</option>
+            <option>🇬🇧 English</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h4>🔐 ความปลอดภัย</h4>
+        <div class="setting-row">
+          <div class="setting-info">
+            <h5>การยืนยันตัวตนสองขั้นตอน (2FA)</h5>
+            <p>เพิ่มความปลอดภัยให้บัญชีด้วย OTP</p>
+          </div>
+          <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <h5>บันทึกการเข้าสู่ระบบ</h5>
+            <p>เก็บประวัติการ login ทั้งหมด</p>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: โพสต์ -->
+    <div class="sec" id="tab-posts">
+      <div class="sec-title">📰 โพสต์ที่เคยโพส</div>
+      <div class="empty-state">
+        <div class="empty-ico">📭</div>
+        <p>ยังไม่มีโพสต์</p>
+        <p style="font-size:.8rem;margin-top:6px">ไปที่หน้า <a href="/nora-web" style="color:var(--primary);font-weight:600">ข่าวสาร</a> เพื่อเขียนโพสต์แรกของคุณ</p>
+      </div>
+    </div>
+
+    <!-- TAB: ประวัติ -->
+    <div class="sec" id="tab-history">
+      <div class="sec-title">🕐 ประวัติการใช้งาน</div>
+      <div class="history-list">
+        <div class="history-item">
+          <div class="history-ico" style="background:#EEF0FF">🔐</div>
+          <div class="history-info">
+            <h5>เข้าสู่ระบบ</h5>
+            <p>Login สำเร็จจาก Browser</p>
+          </div>
+          <div class="history-time">วันนี้</div>
+        </div>
+        <div class="history-item">
+          <div class="history-ico" style="background:#d1fae5">✅</div>
+          <div class="history-info">
+            <h5>สมัครสมาชิก</h5>
+            <p>สร้างบัญชีใหม่สำเร็จ</p>
+          </div>
+          <div class="history-time">{{ user.created_at.strftime('%d/%m/%Y') if user.created_at else '—' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ใช้บ่อย -->
+    <div class="sec" id="tab-quick">
+      <div class="sec-title">⚡ ฟีเจอร์ที่ใช้บ่อย</div>
+      <div class="quick-grid">
+        <a href="/nora-web" class="quick-card" title="ไปยังหน้าข่าวสาร" onclick="sessionStorage.setItem('nrw_view','news');return true">
+          <div class="quick-ico">📰</div>
+          <div class="quick-name">ข่าวสาร</div>
+          <div class="quick-use">ใช้บ่อยที่สุด</div>
+          <div class="quick-bar"><div class="quick-fill" style="width:90%"></div></div>
+        </a>
+        <a href="/nora-web" class="quick-card" title="ไปยังกระเป๋าเงิน">
+          <div class="quick-ico">💳</div>
+          <div class="quick-name">กระเป๋าเงิน</div>
+          <div class="quick-use">ธุรกรรมล่าสุด</div>
+          <div class="quick-bar"><div class="quick-fill" style="width:70%"></div></div>
+        </a>
+        <a href="/nora-web" class="quick-card" title="ไปยังคลาวด์ส่วนตัว">
+          <div class="quick-ico">☁️</div>
+          <div class="quick-name">คลาวด์</div>
+          <div class="quick-use">จัดการไฟล์</div>
+          <div class="quick-bar"><div class="quick-fill" style="width:55%"></div></div>
+        </a>
+        <a href="/nora-web" class="quick-card" title="ไปยังศูนย์ AI">
+          <div class="quick-ico">🤖</div>
+          <div class="quick-name">ศูนย์ AI</div>
+          <div class="quick-use">ถามตอบอัตโนมัติ</div>
+          <div class="quick-bar"><div class="quick-fill" style="width:40%"></div></div>
+        </a>
+        <a href="/members/profile" class="quick-card" title="จัดการโปรไฟล์">
+          <div class="quick-ico">👤</div>
+          <div class="quick-name">โปรไฟล์</div>
+          <div class="quick-use">ตั้งค่าบัญชี</div>
+          <div class="quick-bar"><div class="quick-fill" style="width:25%"></div></div>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- end main-col -->
+</div><!-- end page -->
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+  });
+});
+</script>
 </body>
 </html>
