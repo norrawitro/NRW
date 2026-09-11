@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สมัครสำเร็จ — NRW</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#EEF1F8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:48px 36px;width:100%;max-width:420px;text-align:center}
+    .icon{font-size:3.5rem;margin-bottom:16px}
+    h1{font-size:1.5rem;color:#16182B;margin-bottom:8px}
+    p{color:#6b7280;font-size:.95rem;line-height:1.6}
+    .username{font-weight:700;color:#4F46E5}
+    .btn{display:inline-block;margin-top:28px;padding:12px 32px;background:#4F46E5;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:.95rem;transition:background .2s}
+    .btn:hover{background:#4338ca}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🎉</div>
+    <h1>สมัครสมาชิกสำเร็จ!</h1>
+    <p>ยินดีต้อนรับ <span class="username">{{ username }}</span><br>
+       บัญชีของคุณพร้อมใช้งานแล้ว</p>
+    <a href="/members/login" class="btn">เข้าสู่ระบบ</a>
+  </div>
+</body>
+</html>

@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from jinja2 import Environment, FileSystemLoader
 import os
 
-from app.routers import iot, shop, admin, game
+from app.routers import iot, shop, admin, game, members
 from app.database import engine, Base
 from app.models import User, Product, SensorData, Player  # register all models
 
@@ -33,7 +33,8 @@ env = Environment(loader=FileSystemLoader("app/templates"))
 app.include_router(iot.router,   prefix="/iot",   tags=["IoT / ESP32"])
 app.include_router(shop.router,  prefix="/shop",  tags=["Shop"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
-app.include_router(game.router,  prefix="/game",  tags=["Game"])
+app.include_router(game.router,    prefix="/game",    tags=["Game"])
+app.include_router(members.router, prefix="/members", tags=["Members"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
