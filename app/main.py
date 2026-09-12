@@ -39,11 +39,8 @@ app.include_router(news.router,    prefix="/news",    tags=["News"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    try:
-        template = env.get_template("index.html")
-        return template.render(request=request)
-    except Exception as e:
-        return f"<h1>Error loading template</h1><p>{str(e)}</p>"
+    with open("app/templates/nora-web.html", "r", encoding="utf-8") as f:
+        return f.read()
 
 @app.get("/nora-web", response_class=HTMLResponse)
 async def nora_web():
