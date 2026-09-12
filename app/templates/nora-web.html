@@ -316,8 +316,8 @@
 
     <!-- ============ VIEW: HOME ============ -->
     <div class="view-section" id="view-home">
-      <section><div class="zone-eyebrow">ข่าวสาร & ประกาศ</div>
-        <div class="hero" id="hero"></div>
+      <section><div class="zone-eyebrow">ข่าวสารล่าสุด</div>
+        <div id="homeNewsFeed"></div>
       </section>
 
       <div class="dash">
@@ -348,13 +348,6 @@
           </div>
         </section>
       </div>
-
-      <!-- ข่าวสารล่าสุด -->
-      <section style="margin-top:26px;">
-        <div class="zone-eyebrow">ข่าวสารล่าสุด</div>
-        <div class="section-title"><h2>ประกาศจากระบบ</h2><a data-view="news">ดูทั้งหมด →</a></div>
-        <div id="homePostFeed"></div>
-      </section>
 
       <!-- FOOTER -->
       <footer class="footer">
@@ -640,16 +633,6 @@ function renderLauncher(){
   }).join('');
 }
 
-function renderHero(){
-  const slides = DataLayer.getHeroSlides();
-  document.getElementById('hero').innerHTML = slides.map((s,i)=>`
-    <div class="hero-slide ${i===0?'on':''}" style="background:${s.bg}">
-      <span class="hero-tag ${s.tag}">${s.label}</span>
-      <div class="hero-title">${s.title}</div>
-      <div class="hero-sub">${s.sub}</div>
-    </div>`).join('');
-}
-
 /* ============================================================
    RENDER: NEWS
    ============================================================ */
@@ -698,8 +681,49 @@ async function renderNewsFeed(){
 }
 
 async function renderHomeFeed(){
+  const el = document.getElementById('homeNewsFeed');
+  if(!el) return;
+  el.innerHTML = '<p style="color:var(--ink-soft);font-size:13px;padding:8px 0;">กำลังโหลด…</p>';
   const list = await fetchPosts('all');
-  document.getElementById('homePostFeed').innerHTML = list.slice(0,3).map(postCard).join('');
+  if(!list.length){
+    el.innerHTML = `<div style="text-align:center;padding:28px 0;color:var(--ink-soft);">
+      <div style="font-size:2rem;margin-bottom:8px">📭</div>
+      <p style="font-size:14px;">ยังไม่มีข่าวสาร</p>
+      <a data-view="news" style="color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;">เป็นคนแรกที่โพสต์ →</a>
+    </div>`;
+    return;
+  }
+  const cat_colors = {announce:'var(--primary)',update:'var(--cyan)',event:'var(--gold)'};
+  el.innerHTML = list.slice(0,5).map(p=>{
+    const cat = POST_CATS[p.cat] || {label:p.cat, color:'var(--ink-soft)'};
+    return `<div class="post" data-post-id="${p.id}" style="margin-bottom:12px;">
+      <div class="post-head">
+        <div class="post-av" style="background:${cat.color}">${p.author[0]}</div>
+        <div><div style="font-weight:600;font-size:13.5px;">${p.author}</div>
+          <div style="font-size:12px;color:var(--ink-soft)">${p.when}</div></div>
+        <span class="post-tag" style="background:${cat.color}1a;color:${cat.color}">${cat.label}</span>
+      </div>
+      <div class="post-body" style="font-size:13.5px;">${p.text.length>120 ? p.text.slice(0,120)+'…' : p.text}</div>
+      <div class="post-actions">
+        <button class="like-btn ${p.liked?'liked':''}" data-like="${p.id}">
+          👍 ${p.liked?'ถูกใจแล้ว':'ถูกใจ'} <span class="like-count">${p.likes>0?'('+p.likes+')':''}</span>
+        </button>
+        <button class="comment-toggle-btn" data-comment-toggle="${p.id}">
+          💬 ความเห็น <span>${p.comments>0?'('+p.comments+')':''}</span>
+        </button>
+        <button data-view="news" style="color:var(--primary);font-size:13px;">อ่านต่อ →</button>
+      </div>
+      <div class="comment-section" id="comments-${p.id}">
+        <div class="comment-list" id="comment-list-${p.id}"></div>
+        <div class="comment-input-row">
+          <input type="text" placeholder="เขียนความเห็น…" id="comment-input-${p.id}">
+          <button onclick="submitComment(${p.id})">ส่ง</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + (list.length>5 ? `<div style="text-align:center;margin-top:4px;">
+    <a data-view="news" style="color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;">ดูทั้งหมด ${list.length} รายการ →</a>
+  </div>` : '');
 }
 function renderNewsComposerCats(){
   document.getElementById('newPostCatRow').innerHTML = Object.entries(POST_CATS).map(([k,c],i)=>
@@ -1018,7 +1042,6 @@ document.getElementById('aiInput').addEventListener('keydown', (e)=>{
 renderSidebar();
 renderPhaseLegend();
 renderLauncher();
-renderHero();
 updateWalletChips();
 showView('home');
 </script>
