@@ -551,7 +551,14 @@ const State = {
   ],
   newsFilter:'all',
   wallet:{
-    balance:0, token:0, tx:[],
+    balance:15420, token:8600,
+    tx:[
+      {date:'10 ก.ย. 2569', desc:'เติมเงินผ่านพร้อมเพย์', amount:2000, status:'สำเร็จ'},
+      {date:'09 ก.ย. 2569', desc:'ค่าบริการระบบ POS รายเดือน', amount:-299, status:'สำเร็จ'},
+      {date:'08 ก.ย. 2569', desc:'ได้รับโทเคนจากกิจกรรมแนะนำเพื่อน', amount:150, status:'สำเร็จ'},
+      {date:'05 ก.ย. 2569', desc:'ถอนเงินเข้าบัญชีธนาคาร', amount:-5000, status:'สำเร็จ'},
+      {date:'01 ก.ย. 2569', desc:'เติมเงินผ่านบัตรเครดิต', amount:10000, status:'สำเร็จ'},
+    ]
   },
   storage:{used:18.4, total:50},
   cloudPath:[{id:'root', name:'หน้าแรก'}],
@@ -582,14 +589,9 @@ const DataLayer = {
   getPosts: (filter) => State.posts.filter(p => filter==='all'||!filter ? true : p.cat===filter),
   addPost: (text, cat) => { State.posts.unshift({id:Date.now(), cat, author:'ก (คุณ)', when:'เมื่อสักครู่', text, color:'var(--violet)'}); },
   getWallet: () => State.wallet,
-  async addTransaction: (desc, amount, type) => {
-    const r = await fetch('/wallet/tx', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({type, amount, desc})
-    });
-    if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return null; }
-    if(!r.ok){ const er=await r.json(); alert(er.detail||'เกิดข้อผิดพลาด'); return null; }
-    return await fetchWallet();
+  addTransaction: (desc, amount) => {
+    State.wallet.balance += amount;
+    State.wallet.tx.unshift({date:'วันนี้', desc, amount, status:'สำเร็จ'});
   },
   getCloudPath: () => State.cloudPath,
   getCloudItems: (folderId) => State.cloudItems.filter(i => i.parent===folderId),
@@ -687,17 +689,6 @@ async function fetchPosts(cat='all'){
     const d = await r.json();
     return d.posts || [];
   } catch(e){ return []; }
-}
-
-// ── API: โหลด wallet จริงจาก server ─────────────────────────
-async function fetchWallet(){
-  try{
-    const r = await fetch('/wallet');
-    if(r.status===401){ return State.wallet; }
-    const d = await r.json();
-    State.wallet = {balance:d.balance, token:d.token, tx:d.tx};
-  } catch(e){}
-  return State.wallet;
 }
 
 async function renderNewsFeed(){
@@ -813,7 +804,7 @@ function showView(view){
   window.scrollTo({top:0, behavior:'smooth'});
   if(view==='news'){ renderNewsComposerCats(); renderNewsFilters(); renderNewsFeed(); }
   if(view==='cloud'){ renderStorage(); renderBreadcrumb(); renderFileGrid(); }
-  if(view==='wallet'){ fetchWallet().then(()=>{ renderWallet(); updateWalletChips(); }); }
+  if(view==='wallet'){ renderWallet(); }
   if(view==='ai'){ renderAIQuick(); renderAIMessages(); }
   if(view==='home'){ renderHomeFeed(); }
 }
@@ -1002,17 +993,11 @@ document.getElementById('newFolderBtn').onclick = ()=>{
 let pendingTxType = null;
 document.getElementById('topupBtn').onclick = ()=>{ pendingTxType='topup'; document.getElementById('txForm').classList.remove('hidden'); };
 document.getElementById('withdrawBtn').onclick = ()=>{ pendingTxType='withdraw'; document.getElementById('txForm').classList.remove('hidden'); };
-document.getElementById('txConfirm').onclick = async ()=>{
+document.getElementById('txConfirm').onclick = ()=>{
   const val = parseFloat(document.getElementById('txAmount').value);
   if(!val || val<=0) return;
-  const btn = document.getElementById('txConfirm');
-  btn.disabled = true; btn.textContent = 'กำลังทำ…';
-  const res = await DataLayer.addTransaction(
-    pendingTxType==='topup' ? 'เติมเงินเข้ากระเป๋า' : 'ถอนเงินออกจากกระเป๋า',
-    val, pendingTxType
-  );
-  btn.disabled = false; btn.textContent = 'ยืนยัน';
-  if(res === null) return;  // ผิดพลาด (alert แล้ว)
+  if(pendingTxType==='topup'){ DataLayer.addTransaction('เติมเงินเข้ากระเป๋า', val); }
+  else if(pendingTxType==='withdraw'){ DataLayer.addTransaction('ถอนเงินออกจากกระเป๋า', -val); }
   document.getElementById('txAmount').value='';
   document.getElementById('txForm').classList.add('hidden');
   renderWallet(); updateWalletChips();
@@ -1034,7 +1019,7 @@ renderSidebar();
 renderPhaseLegend();
 renderLauncher();
 renderHero();
-fetchWallet().then(updateWalletChips);
+updateWalletChips();
 showView('home');
 </script>
 </body>

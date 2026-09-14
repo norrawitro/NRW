@@ -9,9 +9,10 @@ from fastapi.responses import HTMLResponse
 from jinja2 import Environment, FileSystemLoader
 import os
 
-from app.routers import iot, shop, admin, game, members, news
+from app.routers import iot, shop, admin, game, members, news, wallet
 from app.database import engine, Base
 from app.models import User, Product, SensorData, Player  # register all models
+from app.models.wallet import Wallet, WalletTransaction   # register wallet models
 
 # Create all tables on startup
 try:
@@ -36,6 +37,7 @@ app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 app.include_router(game.router,    prefix="/game",    tags=["Game"])
 app.include_router(members.router, prefix="/members", tags=["Members"])
 app.include_router(news.router,    prefix="/news",    tags=["News"])
+app.include_router(wallet.router,  prefix="/wallet",  tags=["Wallet"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
