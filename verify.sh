@@ -89,7 +89,7 @@ step2() {
         -F "file=@/tmp/verify_upload.txt" -F "folder_id=$fid")
     check "upload ไฟล์" "$code" "200"
     # 2.4 download ไฟล์ → เนื้่อหาตรง
-    d=$(curl -s -b "$JAR" "$BASE/cloud")
+    d=$(curl -s -b "$JAR" "$BASE/cloud?folder_id=$fid")
     file_id=$(echo "$d" | python3 -c "
 import json,sys
 d=json.load(sys.stdin)
@@ -99,10 +99,11 @@ print(f[0]['id'] if f else '')" 2>/dev/null)
         dl=$(curl -s -b "$JAR" "$BASE/cloud/download/$file_id")
         echo "$dl" | grep -q "verify file content" && ok "download ไฟล์ (เนื้่อหาตรง)" || bad "download: $dl"
     else
-        bad "หา file_id จาก /cloud"
+        bad "หา file_id จาก /cloud?folder_id=$fid"
     fi
-    # 2.5 storage used > 0
-    echo "$d" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['storage']['used']>0" 2>/dev/null \
+    # 2.5 storage used > 0 (ดู used_bytes เพราะไฟล์เล็กรั้บ GB = 0.0)
+    d=$(curl -s -b "$JAR" "$BASE/cloud")
+    echo "$d" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['storage']['used_bytes']>0" 2>/dev/null \
         && ok "storage used > 0" || bad "storage used"
 }
 

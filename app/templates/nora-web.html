@@ -553,17 +553,9 @@ const State = {
   wallet:{
     balance:0, token:0, tx:[],
   },
-  storage:{used:18.4, total:50},
-  cloudPath:[{id:'root', name:'หน้าแรก'}],
-  cloudItems:[
-    {id:'f1', name:'เอกสารทั่วไป', type:'folder', parent:'root', count:24, icon:'📁'},
-    {id:'f2', name:'รูปภาพ', type:'folder', parent:'root', count:156, icon:'🖼️'},
-    {id:'f3', name:'ใบเสร็จ POS', type:'folder', parent:'root', count:89, icon:'🧾'},
-    {id:'f4', name:'สำรองข้อมูล AI', type:'folder', parent:'root', count:12, icon:'🗂️'},
-    {id:'d1', name:'สัญญาเช่าพื้นที่ร้านค้า.pdf', type:'file', parent:'f1', size:'1.2 MB', icon:'📄'},
-    {id:'d2', name:'คู่มือการใช้งาน POS.docx', type:'file', parent:'f1', size:'860 KB', icon:'📝'},
-    {id:'d3', name:'รายงานประจำเดือน สิงหาคม.xlsx', type:'file', parent:'f1', size:'2.1 MB', icon:'📊'},
-  ],
+  storage:{used:0, total:50},
+  cloudPath:[{id:null, name:'หน่าแรก'}],  // id=null = root
+  cloudItems:[],  // items ของโฟลเดอร์ปัจจুবัน (โหลดจาก API)
   aiMessages:[
     {who:'ai', text:'สวัสดีครับ ผมคือ AI ผู้ช่วยของNora-Web 🤖 ผมเชื่อมข้อมูลจากระบบกระเป๋าเงิน คลาวด์ และข่าวสารไว้แล้ว ถามอะไรก็ได้เลยครับ'},
   ],
@@ -592,10 +584,22 @@ const DataLayer = {
     return await fetchWallet();
   },
   getCloudPath: () => State.cloudPath,
-  getCloudItems: (folderId) => State.cloudItems.filter(i => i.parent===folderId),
-  addCloudFolder: (name, parent) => { State.cloudItems.push({id:'f'+Date.now(), name, type:'folder', parent, count:0, icon:'📁'}); },
-  addCloudFile: (name, parent) => { State.cloudItems.push({id:'d'+Date.now(), name, type:'file', parent, size:'—', icon:'📄'}); },
-  deleteCloudItem: (id) => { State.cloudItems = State.cloudItems.filter(i=>i.id!==id); },
+  getCloudItems: (folderId) => State.cloudItems,
+  async addCloudFolder: (name, parent) => {
+    const r = await fetch('/cloud/folders', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, parent_id: parent===null?null:parent})
+    });
+    if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return null; }
+    if(!r.ok){ const er=await r.json(); alert(er.detail||'เกิดข้อผิดพลาด'); return null; }
+    return await fetchCloud();
+  },
+  async deleteCloudItem: (id) => {
+    const r = await fetch(`/cloud/items/${id}`, {method:'DELETE'});
+    if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return null; }
+    if(!r.ok){ const er=await r.json(); alert(er.detail||'เกิดข้อผิดพลาด'); return null; }
+    return await fetchCloud();
+  },
   getAIMessages: () => State.aiMessages,
 };
 
@@ -700,6 +704,24 @@ async function fetchWallet(){
   return State.wallet;
 }
 
+// ── API: โหลด cloud จริงจาก server ──────────────────────────
+async function fetchCloud(){
+  try{
+    const cur = State.cloudPath[State.cloudPath.length-1].id;
+    const r = await fetch('/cloud' + (cur===null ? '' : '?folder_id='+cur));
+    if(r.status===401){ return; }
+    const d = await r.json();
+    State.storage = d.storage;
+    State.cloudItems = d.items;
+  } catch(e){}
+}
+function fmtSize(bytes){
+  if(bytes==null) return '—';
+  if(bytes < 1024) return bytes+' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(0)+' KB';
+  return (bytes/1024/1024).toFixed(1)+' MB';
+}
+
 async function renderNewsFeed(){
   const list = await fetchPosts(State.newsFilter);
   document.getElementById('newsFeed').innerHTML = list.length ? list.map(postCard).join('') :
@@ -724,7 +746,8 @@ function renderNewsFilters(){
    ============================================================ */
 function renderStorage(){
   const s = State.storage;
-  document.getElementById('storageText').textContent = `${s.used} / ${s.total} GB`;
+  const usedTxt = s.used_bytes>0 && s.used<0.01 ? fmtSize(s.used_bytes) : `${s.used} GB`;
+  document.getElementById('storageText').textContent = `${usedTxt} / ${s.total} GB`;
   document.getElementById('storageFill').style.width = Math.min(100, (s.used/s.total*100)).toFixed(1)+'%';
 }
 function renderBreadcrumb(){
@@ -739,7 +762,7 @@ function renderFileGrid(){
       <button class="del" data-del="${it.id}" title="ลบ ${it.name}">🗑️</button>
       <div class="fic">${it.icon}</div>
       <div class="fn">${it.name}</div>
-      <div class="fm">${it.type==='folder' ? (it.count+' ไฟล์') : it.size}</div>
+      <div class="fm">${it.type==='folder' ? (it.count+' ไฟล์') : fmtSize(it.size)}</div>
     </div>`).join('') : `<p style="color:var(--ink-soft);font-size:14px;grid-column:1/-1;text-align:center;padding:30px;">โฟลเดอร์นี้ว่างเปล่า</p>`;
 }
 
@@ -812,7 +835,7 @@ function showView(view){
   renderSidebar();
   window.scrollTo({top:0, behavior:'smooth'});
   if(view==='news'){ renderNewsComposerCats(); renderNewsFilters(); renderNewsFeed(); }
-  if(view==='cloud'){ renderStorage(); renderBreadcrumb(); renderFileGrid(); }
+  if(view==='cloud'){ fetchCloud().then(()=>{ renderStorage(); renderBreadcrumb(); renderFileGrid(); }); }
   if(view==='wallet'){ fetchWallet().then(()=>{ renderWallet(); updateWalletChips(); }); }
   if(view==='ai'){ renderAIQuick(); renderAIMessages(); }
   if(view==='home'){ renderHomeFeed(); }
@@ -968,17 +991,18 @@ document.addEventListener('click', async (e)=>{
 
   // ── cloud breadcrumb ──────────────────────────────────────
   const crumbEl = e.target.closest('[data-crumb]');
-  if(crumbEl){ State.cloudPath = State.cloudPath.slice(0, +crumbEl.dataset.crumb+1); renderBreadcrumb(); renderFileGrid(); return; }
+  if(crumbEl){ State.cloudPath = State.cloudPath.slice(0, +crumbEl.dataset.crumb+1); renderBreadcrumb(); fetchCloud().then(renderFileGrid); return; }
 
   // ── delete cloud item ─────────────────────────────────────
   const delEl = e.target.closest('[data-del]');
-  if(delEl){ e.stopPropagation(); DataLayer.deleteCloudItem(delEl.dataset.del); renderFileGrid(); return; }
+  if(delEl){ e.stopPropagation(); if(!confirm('ลบรายการน้ี?')) return; DataLayer.deleteCloudItem(delEl.dataset.del); return; }
 
   // ── open cloud folder ─────────────────────────────────────
   const cardEl = e.target.closest('.file-card');
   if(cardEl && !e.target.closest('[data-del]')){
-    const item = State.cloudItems.find(i=>i.id===cardEl.dataset.item);
-    if(item && item.type==='folder'){ State.cloudPath.push({id:item.id, name:item.name}); renderBreadcrumb(); renderFileGrid(); }
+    const item = State.cloudItems.find(i=>String(i.id)===cardEl.dataset.item);
+    if(item && item.type==='folder'){ State.cloudPath.push({id:item.id, name:item.name}); renderBreadcrumb(); fetchCloud().then(renderFileGrid); }
+    else if(item && item.type==='file'){ window.location = `/cloud/download/${item.id}`; }
     return;
   }
 
@@ -988,15 +1012,31 @@ document.addEventListener('click', async (e)=>{
 });
 
 document.getElementById('uploadBtn').onclick = ()=>{
-  const current = State.cloudPath[State.cloudPath.length-1].id;
-  DataLayer.addCloudFile('ไฟล์ใหม่ '+new Date().toLocaleTimeString('th-TH'), current);
-  State.storage.used = +(State.storage.used + 0.1).toFixed(1);
-  renderStorage(); renderFileGrid();
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = async ()=>{
+    if(!input.files || !input.files[0]) return;
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true; btn.textContent = 'กำลังอัปโหลด…';
+    const current = State.cloudPath[State.cloudPath.length-1].id;
+    const fd = new FormData();
+    fd.append('file', input.files[0]);
+    if(current!==null) fd.append('folder_id', current);
+    try{
+      const r = await fetch('/cloud/upload', {method:'POST', body: fd});
+      if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return; }
+      if(!r.ok){ const er=await r.json(); alert(er.detail||'อัปโหลดล้มเหลอ'); return; }
+      await fetchCloud();
+      renderStorage(); renderFileGrid();
+    } finally{ btn.disabled=false; btn.textContent='⬆️ อัปโหลดไฟล์'; }
+  };
+  input.click();
 };
-document.getElementById('newFolderBtn').onclick = ()=>{
+document.getElementById('newFolderBtn').onclick = async ()=>{
+  const name = prompt('ชื่อโฟลเดอร์ใหม่:');
+  if(!name || !name.trim()) return;
   const current = State.cloudPath[State.cloudPath.length-1].id;
-  DataLayer.addCloudFolder('โฟลเดอร์ใหม่ '+new Date().toLocaleTimeString('th-TH'), current);
-  renderFileGrid();
+  await DataLayer.addCloudFolder(name.trim(), current);
 };
 
 let pendingTxType = null;
