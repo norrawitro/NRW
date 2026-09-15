@@ -793,35 +793,28 @@ function renderAIQuick(){
 }
 function renderAIMessages(){
   const el = document.getElementById('aiMessages');
-  el.innerHTML = DataLayer.getAIMessages().map(m=>`<div class="msg ${m.who}">${m.text}</div>`).join('');
+  el.innerHTML = State.aiMessages.map(m=>`<div class="msg ${m.who}">${m.text}</div>`).join('');
   el.scrollTop = el.scrollHeight;
 }
-function aiReplyFor(text){
-  const t = text.toLowerCase();
-  if(t.includes('ยอดเงิน')||t.includes('เงิน')){
-    const w = State.wallet;
-    return `ยอดเงินคงเหลือของคุณคือ ฿${w.balance.toLocaleString()} และมีโทเคนสะสม ${w.token.toLocaleString()} โทเคนครับ (ข้อมูลจากระบบกระเป๋าเงินกลาง รหัส 7)`;
-  }
-  if(t.includes('ไฟล์')||t.includes('คลาวด์')){
-    return `ตอนนี้ใช้พื้นที่จัดเก็บไปแล้ว ${State.storage.used} จาก ${State.storage.total} GB ล่าสุดมีไฟล์ในโฟลเดอร์ "เอกสารทั่วไป" 3 ไฟล์ครับ (ข้อมูลจากระบบคลาวด์ รหัส 2)`;
-  }
-  if(t.includes('ข่าว')||t.includes('ประกาศ')){
-    const latest = State.posts[0];
-    return `ประกาศล่าสุด: "${latest.text.slice(0,60)}…" (ข้อมูลจากระบบข่าวสาร รหัส 1)`;
-  }
-  if(t.includes('แนะนำ')||t.includes('ระบบต่อไป')||t.includes('ต่อไป')){
-    return `ตอนนี้ระบบแกนกลาง (ข่าวสาร, คลาวด์, กระเป๋าเงิน, AI) เปิดใช้งานครบแล้ว ระบบถัดไปที่แนะนำคือ "ขายออนไลน์" และ "คลังสินค้า/ขนส่ง" ตามแผนช่วงที่ 2 เพราะเชื่อมกับกระเป๋าเงินโดยตรงและสร้างรายได้เร็วที่สุดครับ`;
-  }
-  return `รับทราบครับ ตอนนี้ผมเชื่อมข้อมูลได้จาก 4 ระบบแกนกลางเท่านั้น (ข่าวสาร, คลาวด์, กระเป๋าเงิน, AI) ลองถามเกี่ยวกับยอดเงิน ไฟล์ หรือข่าวสารดูได้ครับ`;
-}
-function sendAIMessage(text){
+async function sendAIMessage(text){
   if(!text.trim()) return;
   State.aiMessages.push({who:'user', text});
   renderAIMessages();
-  setTimeout(()=>{
-    State.aiMessages.push({who:'ai', text:aiReplyFor(text)});
-    renderAIMessages();
-  }, 350);
+  const btn = document.getElementById('aiSend');
+  btn.disabled = true; btn.textContent = '…';
+  try{
+    const r = await fetch('/ai/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: text})
+    });
+    if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อน'); window.location='/members/login'; return; }
+    const d = await r.json();
+    State.aiMessages.push({who:'ai', text: d.reply || 'ไม่ได้รับคำตอบ'});
+  } catch(e){
+    State.aiMessages.push({who:'ai', text:'เชื่อมโยงไม่สำเร็จ กรุณาลองใหม่อีกครั้่ง'});
+  }
+  renderAIMessages();
+  btn.disabled = false; btn.textContent = 'ส่่ง';
 }
 
 /* ============================================================
