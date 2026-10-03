@@ -48,7 +48,7 @@ async function renderHero(){
   const posts = await fetchPosts('all');
   const latest = posts.find(p=>p.is_pinned) || posts[0];
   const slides = [
-    {tag:'promo', label:'✨ ยินดีต้อนรับ', title:'WKW (Workkaweb) — แพลตฟอร์มรวมทุกอย่างในที่เดียว', sub:'ครบ 21 ระบบ · ร้านค้า · ประกาศซื้อ · คอร์สเรียน · ตลาดงาน · กิจกรรม · IoT และอีกมากมาย', bg:'linear-gradient(135deg,#4F46E5,#8B5CF6)'},
+    {tag:'promo', label:'✨ ยินดีต้อนรับ', title:'WKW · Work กะ Web — แพลตฟอร์มให้คุณมาทำงานร่วมกัน', sub:'ครบ 21 ระบบ · ร้านค้า · ประกาศซื้อ · คอร์สเรียน · ตลาดงาน · กิจกรรม · IoT และอีกมากมาย', bg:'linear-gradient(135deg,#4F46E5,#8B5CF6)'},
   ];
   if(latest){
     slides.push({tag:'news', label:'📢 ประกาศ', title: esc(latest.text.slice(0,80)) + (latest.text.length>80?'…':''),

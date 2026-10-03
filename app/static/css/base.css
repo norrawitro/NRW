@@ -107,3 +107,6 @@ body.sidebar-collapsed .main{margin-left:0}
 .nav-admin .soon{background:#e5484d;color:#fff}
 .nav-admin .soon:empty{display:none}
 @media (max-width:640px){.admin-chip .admin-label{display:none}}
+.brand-name{display:flex;flex-direction:column;line-height:1.05}
+.brand-tag{font-size:10px;font-weight:600;color:var(--ink-soft);letter-spacing:.2px}
+@media (max-width:640px){.brand-tag{display:none}}

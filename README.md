@@ -1,4 +1,6 @@
-# WKW — Workkaweb
+# WKW — Workkaweb (เวิร์ก กะ เว็บ)
+
+> แพลตฟอร์มให้คุณมาทำงานร่วมกัน
 
 (ชื่อเดิม Nora-Web / NRW)
 

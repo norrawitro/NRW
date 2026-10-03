@@ -81,7 +81,7 @@ const State = {
    ============================================================ */
 const DataLayer = {
   getHeroSlides: () => ([
-    {tag:'promo', label:'✨ ยินดีต้อนรับ', title:'WKW (Workkaweb) — แพลตฟอร์มรวมทุกอย่างในที่เดียว', sub:'ระบบแกนกลางครบ 4 ระบบ · Module Registry พร้อมขยาย 21 ระบบ', bg:'linear-gradient(135deg,#4F46E5,#8B5CF6)'},
+    {tag:'promo', label:'✨ ยินดีต้อนรับ', title:'WKW · Work กะ Web — แพลตฟอร์มให้คุณมาทำงานร่วมกัน', sub:'ระบบแกนกลางครบ 4 ระบบ · Module Registry พร้อมขยาย 21 ระบบ', bg:'linear-gradient(135deg,#4F46E5,#8B5CF6)'},
     {tag:'news', label:'📢 ประกาศ', title:'ช่วงที่ 1 เสร็จสมบูรณ์! ข่าวสาร · คลาวด์ · กระเป๋าเงิน · AI ใช้งานได้แล้ว', sub:'ระบบถัดไปตามแผน: ขายออนไลน์ และ คลังสินค้า/ขนส่ง (ช่วงที่ 2)', bg:'linear-gradient(135deg,#059669,#10B981)'},
   ]),
   getModules: () => MODULES,
