@@ -15,9 +15,9 @@ from app.models.post import Post
 router = APIRouter()
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-# llama3.2:latest — ตอบไทยสะอาด (qwen3:4b เป็น thinking model, thinking ปน content)
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
-OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "120"))
+# qwen3:4b-64k — สั่่่งโดย Gnoom 2026-09-30 (4b 64k context) — ใช think:false กัน thinking ปน content
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b-64k")
+OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "300"))
 
 SYSTEM_PROMPT = """คุณคือนอร่า (Nora) — AI ผู้ช่วยของ Nora-Web ตอบเป็นภาษาไทย สุภาพ กระชับ ลงท้ายทุกคำตอบด้วยคำว่า "จบ"
 ข้อมูลปัจจุบันของผู้ใช้ (ข้อมูลจริงจากระบบ):
@@ -83,6 +83,7 @@ def ai_chat(body: ChatCreate, request: Request, db: Session = Depends(get_db)):
                     {"role": "user", "content": msg},
                 ],
                 "stream": False,
+                "think": False,
                 "options": {"num_predict": 300, "temperature": 0.4},
             },
             timeout=OLLAMA_TIMEOUT,

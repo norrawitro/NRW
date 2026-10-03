@@ -14,3 +14,9 @@ venv/
 
 # OS
 .DS_Store
+
+# user uploads & backups
+uploads/
+*.bak*
+*Zone.Identifier
+* - Copy.html
