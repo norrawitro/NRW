@@ -24,7 +24,7 @@ registerModule('rental', {
     else if(!l.is_mine && l.status==='active') btn = `<button class="btn-primary m-sm" data-deal="${l.id}" data-kind="${l.kind}" data-price="${l.price}">${l.kind==='rent'?'เช่า':'ซื้อ'}</button>`;
     return itemCard({images:l.images, icon:l.kind==='rent'?'🔁':'♻️', tag:{text:l.kind==='rent'?'ให้เช่า':'ขาย', cls:l.kind==='rent'?'st-pending':'st-approved'},
       status:l.status_label, mod:l.mod, title:l.title, text:l.description, price:l.price, unit:l.kind==='rent'?' / วัน':'',
-      meta:`${l.seller} · ${l.date}`, actions:btn});
+      meta:`${l.seller} · ${l.date}`, actions:`<div>${btn} ${l.is_mine?'':dmButton(l.seller_username, '💬 ทักผู้ขาย')}</div>`});
   },
   async show(tab){
     const box = document.getElementById('mkBody');

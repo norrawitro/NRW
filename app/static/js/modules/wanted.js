@@ -27,6 +27,7 @@ registerModule('wanted', {
     let btn = `<button class="btn-ghost m-sm" data-offers="${p.id}">ข้อเสนอ (${p.offer_count})</button>`;
     if(p.is_mine && p.status==='open') btn += ` <button class="btn-ghost m-sm" data-close="${p.id}">ปิดประกาศ</button>`;
     if(!p.is_mine && p.status==='open') btn = `<button class="btn-primary m-sm" data-offer="${p.id}">🙋 ฉันมีของ — ยื่นข้อเสนอ</button> ` + btn;
+    if(!p.is_mine) btn += ' ' + dmButton(p.buyer_username, '💬 ทักผู้ประกาศ');
     return itemCard({images:p.images, icon:'🔎', tag:{text:'ต้องการซื้อ', cls:'st-pending'}, status:p.status_label, mod:p.mod,
       title:p.title, text:p.description, price:p.budget, unit:' (งบสูงสุด)', meta:`${p.buyer} · ${p.date}`,
       actions:`<div>${btn}</div><div id="wtOff-${p.id}"></div>`});
@@ -67,7 +68,7 @@ registerModule('wanted', {
     if(!State.me) return toast('กรุณาเข้าสู่ระบบก่อน');
     const d = await api(`/wanted/posts/${id}/offers`); if(!d) return;
     document.getElementById('wtOff-'+id).innerHTML = d.offers.length ? d.offers.map(o=>`<div class="m-card ui-offer">
-      <div class="m-row"><b>${esc(o.seller)}</b><span class="m-price">${baht(o.price)}</span></div>
+      <div class="m-row"><b>${esc(o.seller)}</b><span class="m-price">${baht(o.price)}</span></div>${d.is_owner?`<div>${dmButton(o.seller_username, '💬 คุยกับผู้เสนอ')}</div>`:''}
       ${o.message ? `<p class="ui-text">${esc(o.message)}</p>` : ''}${o.images.length ? gallery(o.images) : ''}
       <div class="m-row"><small class="m-muted">${esc(o.date)} · ${esc(o.status_label)}</small>
       ${d.is_owner && d.post_status==='open' && o.status==='pending' ? `<span><button class="btn-primary m-sm" data-accept="${o.id}" data-price="${o.price}">รับข้อเสนอ</button>

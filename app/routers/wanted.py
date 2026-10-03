@@ -18,7 +18,7 @@ from app.database import get_db
 from app.deps import current_user, optional_user
 from app.models.user import User
 from app.models.wanted import WantedPost, WantedOffer
-from app.services.helpers import fmt, names
+from app.services.helpers import fmt, names, usernames
 from app.services.wallet_ops import move_money, to_money
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 from app.services.media import set_images, images_map
@@ -31,6 +31,7 @@ OFFER_LABELS = {"pending": "รอตอบ", "accepted": "รับแล้ว
 def post_dicts(db: Session, rows: list[WantedPost], me: User | None) -> list[dict]:
     ids = [p.id for p in rows]
     who = names(db, [p.user_id for p in rows])
+    unames = usernames(db, [p.user_id for p in rows])
     imgs = images_map(db, "wanted", ids)
     counts = {}
     for o in db.query(WantedOffer.post_id).filter(WantedOffer.post_id.in_(ids)).all() if ids else []:
@@ -40,7 +41,7 @@ def post_dicts(db: Session, rows: list[WantedPost], me: User | None) -> list[dic
         mine = bool(me and me.id == p.user_id)
         out.append({"id": p.id, "title": p.title, "description": p.description, "budget": float(p.budget),
                     "status": p.status, "status_label": STATUS_LABELS.get(p.status, p.status),
-                    "buyer": who.get(p.user_id, "—"), "is_mine": mine, "date": fmt(p.created_at, False),
+                    "buyer": who.get(p.user_id, "—"), "buyer_username": unames.get(p.user_id), "is_mine": mine, "date": fmt(p.created_at, False),
                     "images": imgs.get(p.id, []), "offer_count": counts.get(p.id, 0),
                     "mod": badge(db, "wanted", p.id) if mine else None})
     return out
@@ -111,9 +112,10 @@ def list_offers(post_id: int, request: Request, db: Session = Depends(get_db)):
         q = q.filter(WantedOffer.seller_id == me.id)
     rows = q.order_by(WantedOffer.price, WantedOffer.id).all()
     who = names(db, [o.seller_id for o in rows])
+    unames = usernames(db, [o.seller_id for o in rows])
     imgs = images_map(db, "wanted_offer", [o.id for o in rows])
     return {"is_owner": p.user_id == me.id, "post_status": p.status,
-            "offers": [{"id": o.id, "seller": who.get(o.seller_id, "—"), "message": o.message, "price": float(o.price),
+            "offers": [{"id": o.id, "seller": who.get(o.seller_id, "—"), "seller_username": unames.get(o.seller_id), "message": o.message, "price": float(o.price),
                         "status": o.status, "status_label": OFFER_LABELS.get(o.status, o.status),
                         "is_mine": o.seller_id == me.id, "date": fmt(o.created_at),
                         "images": imgs.get(o.id, [])} for o in rows]}

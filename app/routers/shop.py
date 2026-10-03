@@ -23,6 +23,7 @@ from app.services.helpers import names
 from app.services.wallet_ops import move_money, move_tokens, to_money
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 from app.services.media import set_images, images_map
+from app.services.helpers import usernames
 
 router = APIRouter()
 TOKEN_PER_BAHT = int(os.getenv("TOKEN_PER_BAHT", "100"))
@@ -69,8 +70,9 @@ def list_products(db: Session = Depends(get_db)):
                   .order_by(Product.created_at.desc(), Product.id.desc()).all() if p.id not in hidden]
     sellers = _sellers(db, [p.id for p in products])
     who = names(db, sellers.values())
+    unames = usernames(db, sellers.values())
     imgs = images_map(db, "product", [p.id for p in products])
-    return {"products": [{**product_dict(p, who.get(sellers.get(p.id), "WKW")),
+    return {"products": [{**product_dict(p, who.get(sellers.get(p.id), "WKW")), "seller_username": unames.get(sellers.get(p.id)),
                           "images": imgs.get(p.id) or ([p.image_url] if p.image_url else [])} for p in products]}
 
 

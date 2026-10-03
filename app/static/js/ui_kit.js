@@ -49,3 +49,17 @@ function itemCard(o){
     ${modBadge(o.mod)}<b>${esc(o.title)}</b>${o.text ? `<p class="m-muted ui-text">${esc(o.text)}</p>` : ''}
     <div class="m-row">${price}<small class="m-muted">${esc(o.meta||'')}</small></div>${o.actions||''}</div>`;
 }
+
+/* ── ข้อความส่วนตัว: ปุ่ม 💬 ส่งข้อความ ใช้ได้ทุกระบบ ── */
+function dmButton(username, label='💬 ส่งข้อความ'){
+  if(!username || (State.me && State.me.username===username)) return '';
+  return `<button type="button" class="btn-ghost m-sm" data-dm="${esc(username)}">${esc(label)}</button>`;
+}
+function openDm(username){
+  if(!State.me){ toast('กรุณาเข้าสู่ระบบก่อน'); return; }
+  State.dmTarget = username; showView('dm');
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-dm]');
+  if(b){ e.preventDefault(); e.stopPropagation(); openDm(b.dataset.dm); }
+}, true);

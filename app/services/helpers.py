@@ -24,6 +24,14 @@ def fmt(dt: datetime | None, with_time: bool = True) -> str:
     return dt.strftime("%d/%m/%Y %H:%M" if with_time else "%d/%m/%Y")
 
 
+def usernames(db: Session, ids) -> dict[int, str]:
+    """{user_id: username} — ใช้ทำปุ่ม 💬 ส่งข้อความ"""
+    ids = {i for i in ids if i}
+    if not ids:
+        return {}
+    return {u.id: u.username for u in db.query(User).filter(User.id.in_(ids)).all()}
+
+
 def names(db: Session, ids) -> dict[int, str]:
     """{user_id: ชื่อ} ทีเดียวหลายคน"""
     ids = {i for i in ids if i}

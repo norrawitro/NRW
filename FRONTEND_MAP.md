@@ -21,7 +21,7 @@
 ## JavaScript — `app/static/js/` (โหลดตามลำดับนี้ ใช้ตัวแปรร่วมกัน)
 | ไฟล์ | มีอะไร | ถ้าจะแก้เรื่อง… |
 |------|--------|----------------|
-| `data.js` | รายชื่อ 21 ระบบ (`MODULES`), ช่วงพัฒนา (`PHASES`), `State`, `DataLayer` | เพิ่ม/เปลี่ยนชื่อระบบ |
+| `data.js` | รายชื่อ 22 ระบบ (`MODULES`), ช่วงพัฒนา (`PHASES`), `State`, `DataLayer` | เพิ่ม/เปลี่ยนชื่อระบบ |
 | `core.js` | `api()`, `toast()`, `baht()`, `registerModule()`, `isLive()`, ผู้ใช้ที่ login (`State.me`), ธีมมืด | ตัวช่วยกลาง |
 | `ui_kit.js` | ชิ้นส่วนร่วมรูปแบบเดียวกัน: `imagePicker(id)` + `pickedImages(id)` (แนบรูป ≤5 → `POST /media/images`), `gallery(images)`, `itemCard({...})` การ์ดรูป+ข้อความ+ราคา+ปุ่ม | ช่องแนบรูป / หน้าตาการ์ดทุกระบบ |
 | `api.js` | `fetchWallet()`, `fetchCloud()`, `fmtSize()` | การโหลดข้อมูลกระเป๋าเงิน/คลาวด์ |
@@ -93,3 +93,9 @@
 - เซิร์ฟเวอร์: body มี `images: list[str]` → `set_images(db, "<kind>", id, body.images)`; ตอนแสดง `images_map(db, "<kind>", ids)` (`app/services/media.py`)
 - ใช้แล้วใน: มือสอง/เช่า (`listing`), ประกาศซื้อ (`wanted`, ข้อเสนอ `wanted_offer`), ร้านค้า (`product`), คอร์ส (`course`), กิจกรรม (`event`), งาน (`job`), ครีเอเตอร์ (`creator`)
 - `modules/wanted.js` — ประกาศซื้อ · `modules/token.js` — มีตลาดประกาศซื้อ/ขายโทเคนด้านล่าง
+
+## ข้อความส่วนตัว (DM)
+- `modules/dm.js` — กล่องข้อความ (ซ้าย) + บทสนทนา (ขวา), ค้นหาสมาชิก, แนบรูป, ดึงข้อความใหม่ทุก 3 วินาที; มือถือแสดงทีละฝั่ง
+- เปิดคุยจากระบบไหนก็ได้: ใส่ `${dmButton(username, '💬 ทักผู้ขาย')}` ในการ์ด (ui_kit.js) หรือเรียก `openDm('username')`
+- ตัวเลขยังไม่อ่าน: ปุ่ม ✉️ ที่หัวเว็บ + เมนูซ้าย — `refreshBadges()` ใน core.js (ทุก 30 วินาที, รวมตัวนับ 🛡️ ของผู้ดูแล)
+- API ต้องส่ง `seller_username` / `buyer_username` มาด้วยถ้าจะมีปุ่มทัก (ตอนนี้มีใน มือสอง, ประกาศซื้อ, ร้านค้า)

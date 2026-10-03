@@ -13,7 +13,7 @@ function renderSidebar(){
       const locked = !isLive(m);
       html += `<a href="#" class="nav-item ${locked?'locked':''} ${State.view===(m.view||m.id)?'active':''}" data-module="${m.id}" title="${m.icon} ${m.label}${locked?' (ยังไม่เปิด)':''} — ${m.reason||''}">
         <span class="ic" style="background:${PHASES[phase].color}1a;color:${PHASES[phase].color}">${m.icon}</span>${m.label}
-        ${locked?'<span class="soon">เร็วๆ นี้</span>':''}
+        ${locked?'<span class="soon">เร็วๆ นี้</span>':''}${m.id==='dm'?`<span class="soon dm-soon">${State.dmUnread||''}</span>`:''}
       </a>`;
     });
   });
@@ -48,7 +48,7 @@ async function renderHero(){
   const posts = await fetchPosts('all');
   const latest = posts.find(p=>p.is_pinned) || posts[0];
   const slides = [
-    {tag:'promo', label:'✨ ยินดีต้อนรับ', title:'WKW · Work กะ Web — แพลตฟอร์มให้คุณมาทำงานร่วมกัน', sub:'ครบ 21 ระบบ · ร้านค้า · ประกาศซื้อ · คอร์สเรียน · ตลาดงาน · กิจกรรม · IoT และอีกมากมาย', bg:'linear-gradient(135deg,#4F46E5,#8B5CF6)'},
+    {tag:'promo', label:'✨ ยินดีต้อนรับ', title:'WKW · Work กะ Web — แพลตฟอร์มให้คุณมาทำงานร่วมกัน', sub:'ครบ 22 ระบบ · ร้านค้า · ประกาศซื้อ · คอร์สเรียน · ตลาดงาน · กิจกรรม · IoT และอีกมากมาย', bg:'linear-gradient(135deg,#4F46E5,#8B5CF6)'},
   ];
   if(latest){
     slides.push({tag:'news', label:'📢 ประกาศ', title: esc(latest.text.slice(0,80)) + (latest.text.length>80?'…':''),

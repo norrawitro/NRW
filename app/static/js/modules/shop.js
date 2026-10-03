@@ -49,7 +49,7 @@ registerModule('shop', {
     document.getElementById('shopGrid').innerHTML = this.products.length ? this.products.map(p=>`
       <div class="m-card m-product">
         ${gallery(p.images, '🛍️')}
-        <b>${esc(p.name)}</b><p class="m-muted">${esc(p.description)}</p><small class="m-muted">🏪 ${esc(p.seller)}</small>
+        <b>${esc(p.name)}</b><p class="m-muted">${esc(p.description)}</p><small class="m-muted">🏪 ${esc(p.seller)} ${dmButton(p.seller_username, '💬 ทักร้าน')}</small>
         <div class="m-row"><span class="m-price">${baht(p.price)}</span><span class="m-muted">เหลือ ${p.stock}</span></div>
         <button class="btn-primary" data-add="${p.id}" ${p.stock<1?'disabled':''}>${p.stock<1?'หมด':'ใส่ตะกร้า'}</button></div>`).join('')
       : '<p class="m-muted">ยังไม่มีสินค้า — กด ➕ ลงสินค้า เพื่อเปิดร้านของคุณ</p>';

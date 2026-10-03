@@ -134,3 +134,12 @@ class LessonAnswer(Base):
     answer      = Column(Text, nullable=False, default="")
     correct     = Column(Boolean, nullable=False, default=False)
     tries       = Column(Integer, nullable=False, default=0)
+
+
+class DmRead(Base):
+    """ข้อความส่วนตัว: อ่านถึงข้อความไหนแล้ว (ใช้นับข้อความที่ยังไม่อ่าน)"""
+    __tablename__ = "dm_reads"
+    id           = Column(Integer, primary_key=True)
+    user_id      = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    room         = Column(String(50), nullable=False, index=True)
+    last_read_id = Column(Integer, nullable=False, default=0)

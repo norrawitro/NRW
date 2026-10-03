@@ -61,9 +61,24 @@ function renderMe(){
         <a href="/members/logout" style="color:var(--ink-soft);font-size:13px;font-weight:600;">ออกจากระบบ</a></div>`;
   }
   renderSidebar();
+  refreshBadges();
+}
+/** ตัวเลขที่หัวเว็บ: ✉️ ข้อความยังไม่อ่าน (ทุกคน) + 🛡️ รออนุมัติ (ผู้ดูแล) — อัปเดตทุก 30 วินาที */
+async function refreshBadges(){
+  clearTimeout(refreshBadges.t);
+  const dm = document.getElementById('dmChip');
+  if(dm){
+    dm.classList.toggle('hidden', !State.me);
+    if(State.me) try{
+      const r = await fetch('/dm/unread', {credentials:'same-origin'});
+      if(r.ok){ const d = await r.json(); State.dmUnread = d.total ? String(d.total) : '';
+        document.getElementById('dmCount').textContent = State.dmUnread;
+        const nav = document.querySelector('.nav-item[data-module="dm"] .soon'); if(nav) nav.textContent = State.dmUnread; }
+    }catch(e){}
+  }
+  if(State.me) refreshBadges.t = setTimeout(refreshBadges, 30000);
   loadAdminCount();
 }
-/** ผู้ดูแล: ปุ่ม 🛡️ อนุมัติ ที่หัวเว็บ + จำนวนที่รออนุมัติ (อัปเดตทุก 60 วินาที) */
 async function loadAdminCount(){
   const chip = document.getElementById('adminChip'); if(!chip) return;
   chip.classList.toggle('hidden', !(State.me && State.me.is_admin));
@@ -75,7 +90,6 @@ async function loadAdminCount(){
     const nav = document.getElementById('adminNavCount'); if(nav) nav.textContent = n;
     chip.title = `รออนุมัติ: เนื้อหา ${d.content} · คำขอเงิน ${d.money}`;
   }catch(e){}
-  clearTimeout(loadAdminCount.t); loadAdminCount.t = setTimeout(loadAdminCount, 60000);
 }
 
 /* ── ธีมมืด: จำไว้ในเบราว์เซอร์ (ใช้ key เดียวกับหน้าโปรไฟล์) ───── */

@@ -26,7 +26,7 @@ def listing_dict(db: Session, l: Listing, me: User | None) -> dict:
     seller = db.query(User).filter(User.id == l.seller_id).first()
     d = {"id": l.id, "kind": l.kind, "title": l.title, "description": l.description,
          "price": float(l.price), "status": l.status, "status_label": STATUS_LABELS.get(l.status, l.status),
-         "seller": seller.full_name if seller else "—", "is_mine": bool(me and me.id == l.seller_id),
+         "seller": seller.full_name if seller else "—", "seller_username": seller.username if seller else None, "is_mine": bool(me and me.id == l.seller_id),
          "date": l.created_at.strftime("%d/%m/%Y") if l.created_at else "—",
          "images": images_map(db, "listing", [l.id]).get(l.id, []),
          "mod": badge(db, "listing", l.id) if (me and me.id == l.seller_id) else None}

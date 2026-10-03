@@ -53,3 +53,30 @@
 .m-product .ui-strip img,.ui-strip img{width:48px;height:48px;aspect-ratio:auto;object-fit:cover;border-radius:6px;cursor:pointer;flex:none}
 .ui-text{white-space:pre-line;overflow-wrap:anywhere}
 .m-h{font-size:16px;margin:8px 0 12px}
+/* ข้อความส่วนตัว (dm.js) */
+.dm-wrap{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+.dm-side{max-height:72vh;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.dm-conv{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;text-decoration:none;color:var(--ink)}
+.dm-conv:hover,.dm-conv.on{background:var(--surface-2)}
+.dm-av{width:36px;height:36px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-weight:700}
+.dm-meta{display:flex;flex-direction:column;min-width:0;flex:1}
+.dm-meta small{color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.dm-badge{background:#e5484d;color:#fff;border-radius:999px;padding:0 7px;font-size:11px}
+.dm-main{display:flex;flex-direction:column;gap:10px;min-height:420px}
+.dm-head{display:flex;align-items:center;gap:8px}
+.dm-head #dmBack{display:none}
+.dm-log{flex:1;min-height:300px;max-height:56vh}
+.dm-imgs{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.dm-imgs img{width:120px;height:120px;object-fit:cover;border-radius:8px}
+.dm-compose .ui-addimg{font-size:12px}
+.dm-empty{padding:60px 0}
+.nav-item .dm-soon{background:#e5484d;color:#fff}
+.nav-item .dm-soon:empty{display:none}
+.dm-chip{font-size:16px}
+@media (max-width:760px){
+  .dm-wrap{grid-template-columns:1fr}
+  .dm-wrap.has-peer .dm-side{display:none}
+  .dm-wrap:not(.has-peer) .dm-main{display:none}
+  .dm-head #dmBack{display:inline-flex}
+}
