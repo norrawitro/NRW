@@ -4,7 +4,7 @@
 
 Multi-purpose server สำหรับ Norrawit Roopsoong (Gnoom)
 
-🌐 **Live:** https://nora-web.tail85b885.ts.net/
+🌐 **Live:** https://wkw.tail85b885.ts.net/
 
 ---
 

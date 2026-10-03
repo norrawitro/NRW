@@ -1,11 +1,11 @@
 #!/bin/bash
-# NRW Tailscale Funnel Setup
+# WKW Tailscale Funnel Setup
 # เปิด public access ผ่าน Tailscale Funnel
-# Domain: https://nora-web.tail85b885.ts.net
+# Domain: https://wkw.tail85b885.ts.net  (มาจากชื่อเครื่องใน Tailscale — ตั้งด้วย: sudo tailscale set --hostname=wkw)
 
 set -e
 
-echo "=== NRW Tailscale Funnel ==="
+echo "=== WKW Tailscale Funnel ==="
 
 # 1. Reset old config first (IMPORTANT!)
 echo "Resetting old config..."
@@ -26,6 +26,7 @@ tailscale funnel --bg 8000
 
 echo ""
 echo "✅ Funnel active!"
-echo "🌐 Public URL: https://nora-web.tail85b885.ts.net"
+URL=$(tailscale status --json 2>/dev/null | python3 -c "import json,sys; print('https://'+json.load(sys.stdin)['Self']['DNSName'].rstrip('.'))" 2>/dev/null || echo "https://wkw.tail85b885.ts.net")
+echo "🌐 Public URL: $URL"
 echo ""
 echo "ปิด funnel ด้วย: tailscale funnel off && tailscale serve off"

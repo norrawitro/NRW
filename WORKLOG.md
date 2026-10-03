@@ -9,8 +9,8 @@
 - ชื่อที่ผู้ใช้เห็นทั้งหมด "Nora-Web" / "NRW" → **WKW**: โลโก้ (W), แท็บเบราว์เซอร์, หน้า login/สมัคร/โปรไฟล์/แผงผู้ดูแล,
   ท้ายเว็บ, หน้าเกี่ยวกับ, ข้อความต้อนรับ, ชื่อร้านของแพลตฟอร์ม, ผู้ช่วย AI
 - ไฟล์หน้าเว็บ `app/templates/nora-web.html` → `app/templates/wkw.html` (ลิงก์ `/nora-web` เก่ายังเปิดได้, เพิ่ม `/wkw`)
-- โดเมน `nora-web.tail85b885.ts.net` มาจากชื่อเครื่องใน Tailscale — เปลี่ยนจากโค้ดไม่ได้ ต้องเปลี่ยนชื่อเครื่องในหน้า Tailscale
-  แล้ว `verify.sh` ใช้ `PUBLIC_URL=https://<ชื่อใหม่>.tail85b885.ts.net bash verify.sh 4`
+- โดเมนเปลี่ยนเป็น `https://wkw.tail85b885.ts.net` — มาจากชื่อเครื่องใน Tailscale: `sudo tailscale set --hostname=wkw`
+  แล้ว `bash funnel.sh` (README / verify.sh / funnel.sh อัปเดตเป็นโดเมนใหม่แล้ว, funnel.sh แสดง URL จริงจาก tailscale)
 - ชื่อในคอมเมนต์โค้ด/ชื่อ repo (NRW) ยังคงเดิม — ไม่กระทบผู้ใช้
 
 ---
