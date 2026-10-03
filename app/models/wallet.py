@@ -51,3 +51,18 @@ class TokenTransaction(Base):
     kind       = Column(String(20), nullable=False)        # earn / transfer_in / transfer_out / redeem / admin
     note       = Column(String(200), nullable=False, default="")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class TokenOffer(Base):
+    """ประกาศซื้อ/ขายโทเคนระหว่างสมาชิก — ของที่ประกาศถูกพักไว้ (escrow) จนมีคนรับหรือยกเลิก
+    sell: พักโทเคน amount ไว้ · buy: พักเงิน amount × price ไว้"""
+    __tablename__ = "token_offers"
+
+    id         = Column(Integer, primary_key=True)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    side       = Column(String(4), nullable=False)               # sell / buy
+    price      = Column(Numeric(12, 2), nullable=False)          # บาทต่อ 1 โทเคน
+    amount     = Column(Integer, nullable=False)                 # จำนวนตอนประกาศ
+    remaining  = Column(Integer, nullable=False)
+    status     = Column(String(10), nullable=False, default="open", index=True)   # open / filled / cancelled
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

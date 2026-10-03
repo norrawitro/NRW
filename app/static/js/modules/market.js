@@ -18,14 +18,13 @@ registerModule('rental', {
     this.show('all');
   },
   card(l){
-    const unit = l.kind==='rent' ? ' / วัน' : '';
     let btn = '';
     if(l.is_mine && l.status==='active') btn = `<button class="btn-ghost m-sm" data-close="${l.id}">ปิดประกาศ</button>`;
     else if(l.is_mine && l.status==='rented' && l.open_deal_id) btn = `<button class="btn-primary m-sm" data-return="${l.open_deal_id}">ได้ของคืนแล้ว</button>`;
     else if(!l.is_mine && l.status==='active') btn = `<button class="btn-primary m-sm" data-deal="${l.id}" data-kind="${l.kind}" data-price="${l.price}">${l.kind==='rent'?'เช่า':'ซื้อ'}</button>`;
-    return `<div class="m-card m-product"><div class="m-row"><span class="badge ${l.kind==='rent'?'st-pending':'st-approved'}">${l.kind==='rent'?'ให้เช่า':'ขาย'}</span>
-      <small class="m-muted">${esc(l.status_label)}</small></div>${modBadge(l.mod)}<b>${esc(l.title)}</b><p class="m-muted">${esc(l.description)}</p>
-      <div class="m-row"><span class="m-price">${baht(l.price)}${unit}</span><small class="m-muted">${esc(l.seller)} · ${esc(l.date)}</small></div>${btn}</div>`;
+    return itemCard({images:l.images, icon:l.kind==='rent'?'🔁':'♻️', tag:{text:l.kind==='rent'?'ให้เช่า':'ขาย', cls:l.kind==='rent'?'st-pending':'st-approved'},
+      status:l.status_label, mod:l.mod, title:l.title, text:l.description, price:l.price, unit:l.kind==='rent'?' / วัน':'',
+      meta:`${l.seller} · ${l.date}`, actions:btn});
   },
   async show(tab){
     const box = document.getElementById('mkBody');
@@ -35,6 +34,7 @@ registerModule('rental', {
         <label>ชื่อสินค้า<input id="mkTitle" class="m-input" maxlength="200"></label>
         <label>รายละเอียด<textarea id="mkDesc" class="m-input" rows="3" maxlength="3000"></textarea></label>
         <label>ราคา (บาท)<input id="mkPrice" class="m-input" type="number" min="1"></label>
+        <label>รูปสินค้า</label>${imagePicker('mk')}
         <button class="btn-primary" id="mkSubmit">ลงประกาศ</button></div>`;
       return;
     }
@@ -48,7 +48,7 @@ registerModule('rental', {
   },
   async create(){
     const body = {kind:document.getElementById('mkKind').value, title:document.getElementById('mkTitle').value.trim(),
-                  description:document.getElementById('mkDesc').value.trim(), price:+document.getElementById('mkPrice').value};
+                  description:document.getElementById('mkDesc').value.trim(), price:+document.getElementById('mkPrice').value, images:pickedImages('mk')};
     if(body.title.length<2 || !(body.price>0)){ toast('กรุณาใส่ชื่อและราคา'); return; }
     const r = await api('/market/listings', {json:body});
     if(r){ toast(r.mod ? 'ส่งแล้ว — จะแสดงเมื่อผู้ดูแลอนุมัติ' : 'ลงประกาศแล้ว'); document.querySelector('.m-tab[data-tab="mine"]').click(); }

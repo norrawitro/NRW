@@ -13,6 +13,7 @@ from app.models.community import Event, Ticket
 from app.services.helpers import now, aware, fmt, names, get_or_404
 from app.services.wallet_ops import move_money, to_money
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
+from app.services.media import set_images, images_map
 
 router = APIRouter()
 
@@ -24,6 +25,7 @@ def event_dict(db, e, me, who):
             "price": float(e.price), "capacity": e.capacity, "sold": sold, "organizer": who.get(e.organizer_id, "—"),
             "is_mine": bool(me and me.id == e.organizer_id), "past": aware(e.starts_at) < now(),
             "my_ticket": mine.code if mine else None,
+            "images": images_map(db, "event", [e.id]).get(e.id, []),
             "mod": badge(db, "event", e.id) if (me and me.id == e.organizer_id) else None}
 
 
@@ -43,6 +45,7 @@ class EventIn(BaseModel):
     place: str = Field("", max_length=300)
     price: float = Field(0, ge=0, le=1_000_000)
     capacity: int = Field(50, ge=1, le=100000)
+    images: list[str] = Field(default_factory=list, max_length=5)
 
 
 @router.post("")
@@ -52,6 +55,7 @@ def create_event(body: EventIn, request: Request, db: Session = Depends(get_db))
               starts_at=body.starts_at, place=body.place.strip(), price=to_money(body.price), capacity=body.capacity)
     db.add(e)
     db.flush()
+    set_images(db, "event", e.id, body.images)
     status = submit(db, "event", e.id, me)
     db.commit()
     return {"id": e.id, "mod_status": status}

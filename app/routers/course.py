@@ -17,6 +17,7 @@ from app.models.work import Course, Lesson, Enrollment, LessonQuestion, LessonAn
 from app.services.helpers import names, get_or_404
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 from app.services.wallet_ops import move_money, to_money
+from app.services.media import set_images, images_map
 
 router = APIRouter()
 
@@ -45,6 +46,7 @@ def list_courses(request: Request, db: Session = Depends(get_db)):
     courses = [c for c in db.query(Course).filter(Course.is_published == True).order_by(Course.id.desc()).all()
                if c.id not in hidden or (me and me.id == c.instructor_id)]
     who = names(db, [c.instructor_id for c in courses])
+    imgs = images_map(db, "course", [c.id for c in courses])
     out = []
     for c in courses:
         en = _enrollment(db, c.id, me.id) if me else None
@@ -54,6 +56,7 @@ def list_courses(request: Request, db: Session = Depends(get_db)):
                     "students": db.query(Enrollment).filter(Enrollment.course_id == c.id).count(),
                     "is_mine": bool(me and me.id == c.instructor_id), "enrolled": en is not None,
                     "progress": f"{len(_done_set(en))}/{n_lessons}" if en else None,
+                    "images": imgs.get(c.id, []),
                     "mod": badge(db, "course", c.id) if (me and me.id == c.instructor_id) else None})
     return {"courses": out}
 
@@ -62,6 +65,7 @@ class CourseIn(BaseModel):
     title: str = Field(..., min_length=2, max_length=200)
     description: str = Field("", max_length=5000)
     price: float = Field(0, ge=0, le=1_000_000)
+    images: list[str] = Field(default_factory=list, max_length=5)
 
 
 @router.post("")
@@ -70,6 +74,7 @@ def create_course(body: CourseIn, request: Request, db: Session = Depends(get_db
     c = Course(instructor_id=me.id, title=body.title.strip(), description=body.description.strip(), price=to_money(body.price))
     db.add(c)
     db.flush()
+    set_images(db, "course", c.id, body.images)
     status = submit(db, "course", c.id, me)
     db.commit()
     return {"id": c.id, "mod_status": status}
@@ -104,6 +109,7 @@ def course_detail(course_id: int, request: Request, db: Session = Depends(get_db
             d.update(content=l.content, video_id=l.video_id, questions=[_question_dict(db, q, me.id, is_owner) for q in qs])
         out.append(d)
     return {"id": c.id, "title": c.title, "description": c.description, "price": float(c.price),
+            "images": images_map(db, "course", [c.id]).get(c.id, []),
             "instructor": names(db, [c.instructor_id]).get(c.instructor_id, "—"),
             "is_mine": is_owner, "enrolled": en is not None, "progress": f"{len(done)}/{len(lessons)}",
             "mod": badge(db, "course", c.id) if is_owner else None, "lessons": out}

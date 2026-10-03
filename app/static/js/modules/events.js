@@ -5,7 +5,7 @@ registerModule('events', {
   async render(el){
     this.el = el;
     const d = await api('/events'); if(!d) return;
-    el.innerHTML = `<div class="m-split"><div>${d.events.map(e=>`<div class="m-card"><div class="m-row"><b>${esc(e.title)}</b><span class="m-price">${e.price>0?baht(e.price):'ฟรี'}</span></div>
+    el.innerHTML = `<div class="m-split"><div>${d.events.map(e=>`<div class="m-card">${e.images.length?gallery(e.images):''}<div class="m-row"><b>${esc(e.title)}</b><span class="m-price">${e.price>0?baht(e.price):'ฟรี'}</span></div>
         ${modBadge(e.mod)}<p>${esc(e.description)}</p><small class="m-muted">🗓 ${esc(e.when)} · 📍 ${esc(e.place)} · ผู้จัด ${esc(e.organizer)} · ${e.sold}/${e.capacity} ที่นั่ง</small>
         <div>${e.my_ticket?`<span class="badge st-approved">🎫 ตั๋วของฉัน: ${esc(e.my_ticket)}</span>`
           : !e.past && e.sold<e.capacity ? `<button class="btn-primary m-sm" data-buy="${e.id}" data-price="${e.price}">ซื้อตั๋ว</button>` : `<span class="badge st-rejected">${e.past?'จบแล้ว':'เต็ม'}</span>`}
@@ -13,6 +13,7 @@ registerModule('events', {
       <div class="m-card m-form"><h3>➕ จัดกิจกรรม</h3><input id="evTitle" class="m-input" placeholder="ชื่อกิจกรรม"><textarea id="evDesc" class="m-input" rows="3" placeholder="รายละเอียด"></textarea>
         <label>วันเวลา<input id="evWhen" class="m-input" type="datetime-local"></label><input id="evPlace" class="m-input" placeholder="สถานที่ หรือลิงก์ออนไลน์">
         <input id="evPrice" class="m-input" type="number" min="0" placeholder="ราคาตั๋ว (0 = ฟรี)"><input id="evCap" class="m-input" type="number" min="1" value="50" placeholder="จำนวนที่นั่ง">
+        <label>รูปโปสเตอร์ / สถานที่</label>${imagePicker('ev')}
         <button class="btn-primary" id="evNew">สร้างกิจกรรม</button></div></div>`;
     el.onclick = e=>this.click(e);
   },
@@ -36,7 +37,7 @@ registerModule('events', {
       if(!when) return toast('กรุณาเลือกวันเวลา');
       const body = {title:document.getElementById('evTitle').value.trim(), description:document.getElementById('evDesc').value.trim(),
         starts_at:new Date(when).toISOString(), place:document.getElementById('evPlace').value.trim(),
-        price:+document.getElementById('evPrice').value||0, capacity:+document.getElementById('evCap').value||50};
+        price:+document.getElementById('evPrice').value||0, capacity:+document.getElementById('evCap').value||50, images:pickedImages('ev')};
       const r = await api('/events', {json:body});
       if(r){ toastSubmitted(r, 'สร้างกิจกรรมแล้ว'); this.render(this.el); }
     }

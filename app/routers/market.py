@@ -16,6 +16,7 @@ from app.models.user import User
 from app.models.market import Listing, Deal
 from app.services.wallet_ops import move_money, to_money
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
+from app.services.media import set_images, images_map
 
 router = APIRouter()
 STATUS_LABELS = {"active": "เปิดอยู่", "sold": "ขายแล้ว", "rented": "ถูกเช่าอยู่", "closed": "ปิดแล้ว"}
@@ -27,6 +28,7 @@ def listing_dict(db: Session, l: Listing, me: User | None) -> dict:
          "price": float(l.price), "status": l.status, "status_label": STATUS_LABELS.get(l.status, l.status),
          "seller": seller.full_name if seller else "—", "is_mine": bool(me and me.id == l.seller_id),
          "date": l.created_at.strftime("%d/%m/%Y") if l.created_at else "—",
+         "images": images_map(db, "listing", [l.id]).get(l.id, []),
          "mod": badge(db, "listing", l.id) if (me and me.id == l.seller_id) else None}
     if l.status == "rented":
         deal = (db.query(Deal).filter(Deal.listing_id == l.id, Deal.returned_at.is_(None))
@@ -55,6 +57,7 @@ class ListingIn(BaseModel):
     title: str = Field(..., min_length=2, max_length=200)
     description: str = Field("", max_length=3000)
     price: float = Field(..., gt=0, le=10_000_000)
+    images: list[str] = Field(default_factory=list, max_length=5)
 
 
 @router.post("/listings")
@@ -64,6 +67,7 @@ def create_listing(body: ListingIn, request: Request, db: Session = Depends(get_
                 description=body.description.strip(), price=to_money(body.price), status="active")
     db.add(l)
     db.flush()
+    set_images(db, "listing", l.id, body.images)
     submit(db, "listing", l.id, me)
     db.commit()
     db.refresh(l)

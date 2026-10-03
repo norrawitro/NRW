@@ -13,6 +13,7 @@ from app.models.community import CreatorPage, CreatorPost, Subscription
 from app.services.helpers import now, aware, fmt, names, get_or_404
 from app.services.wallet_ops import move_money, to_money
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
+from app.services.media import set_images, images_map
 
 router = APIRouter()
 DAYS = 30
@@ -32,6 +33,7 @@ def list_creators(request: Request, db: Session = Depends(get_db)):
     for p in pages:
         sub = _active_sub(db, p.id, me.id) if me else None
         out.append({"id": p.id, "name": who.get(p.user_id, "—"), "bio": p.bio, "monthly_price": float(p.monthly_price),
+                    "images": images_map(db, "creator", [p.id]).get(p.id, []),
                     "fans": sum(1 for s in db.query(Subscription).filter(Subscription.creator_id == p.id).all() if aware(s.expires_at) > now()),
                     "is_mine": bool(me and me.id == p.user_id), "subscribed_until": fmt(sub.expires_at, False) if sub else None})
     return {"creators": out}
@@ -40,6 +42,7 @@ def list_creators(request: Request, db: Session = Depends(get_db)):
 class PageIn(BaseModel):
     bio: str = Field("", max_length=2000)
     monthly_price: float = Field(..., ge=1, le=100000)
+    images: list[str] = Field(default_factory=list, max_length=5)
 
 
 @router.post("")
@@ -51,6 +54,8 @@ def become_creator(body: PageIn, request: Request, db: Session = Depends(get_db)
     else:
         p = CreatorPage(user_id=me.id, bio=body.bio.strip(), monthly_price=to_money(body.monthly_price))
         db.add(p)
+    db.flush()
+    set_images(db, "creator", p.id, body.images)
     db.commit()
     return {"id": p.id}
 

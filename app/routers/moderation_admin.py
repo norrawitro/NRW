@@ -15,11 +15,13 @@ from app.models.moderation import Moderation
 from app.models.post import Post
 from app.models.product import Product
 from app.models.market import Listing
+from app.models.wanted import WantedPost
 from app.models.work import Course, Job, Ad
 from app.models.community import Video, Event, CreatorPost, HealthLog
 from app.services.helpers import fmt, names
 from app.services.moderation import LABELS, decide
 from app.services.wallet_ops import move_money
+from app.services.media import images_map
 
 router = APIRouter()
 
@@ -50,7 +52,19 @@ def _preview(db: Session, kind: str, item_id: int) -> dict:
     if kind == "health" and (x := one(HealthLog)):
         return {"title": f"{x.activity} {x.minutes} นาที" + (f" · {x.steps:,} ก้าว" if x.steps else ""),
                 "detail": f"วันที่ {x.day:%d/%m/%Y}", "image": f"/health/evidence/{x.id}"}
+    if kind == "wanted" and (x := one(WantedPost)):
+        return {"title": x.title, "detail": f"งบ ฿{float(x.budget):,.2f}\n{x.description}"}
     return {"title": "(ถูกลบไปแล้ว)", "detail": ""}
+
+
+def preview(db: Session, kind: str, item_id: int) -> dict:
+    """_preview + รูปที่แนบ (ทุกประเภทใช้ตาราง ItemImage ร่วมกัน)"""
+    d = _preview(db, kind, item_id)
+    imgs = images_map(db, kind, [item_id]).get(item_id, [])
+    if imgs:
+        d["images"] = imgs
+        d.setdefault("image", imgs[0])
+    return d
 
 
 @router.get("/api/moderation")
@@ -67,7 +81,7 @@ def queue(request: Request, status: str = "pending", kind: str = "", db: Session
     return {"labels": LABELS, "pending_counts": counts,
             "items": [{"id": m.id, "kind": m.kind, "kind_label": LABELS.get(m.kind, m.kind), "status": m.status,
                        "reason": m.reason, "owner": who.get(m.owner_id, "—"), "date": fmt(m.created_at),
-                       "decided_by": m.decided_by, **_preview(db, m.kind, m.item_id)} for m in rows]}
+                       "decided_by": m.decided_by, **preview(db, m.kind, m.item_id)} for m in rows]}
 
 
 class Decision(BaseModel):

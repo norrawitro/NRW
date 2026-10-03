@@ -14,6 +14,7 @@ from app.models.work import Job, JobProposal
 from app.services.helpers import names, get_or_404, fmt
 from app.services.wallet_ops import move_money, to_money
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
+from app.services.media import set_images, images_map
 
 router = APIRouter()
 LABELS = {"open": "เปิดรับ", "hired": "กำลังทำ", "done": "เสร็จแล้ว", "cancelled": "ยกเลิก"}
@@ -25,7 +26,8 @@ def job_dict(db, j, me):
          "status": j.status, "status_label": LABELS[j.status], "client": who.get(j.client_id, "—"),
          "freelancer": who.get(j.freelancer_id), "date": fmt(j.created_at, False),
          "is_mine": bool(me and me.id == j.client_id), "is_hired_me": bool(me and me.id == j.freelancer_id),
-         "mod": badge(db, "job", j.id) if (me and me.id == j.client_id) else None}
+         "mod": badge(db, "job", j.id) if (me and me.id == j.client_id) else None,
+         "images": images_map(db, "job", [j.id]).get(j.id, [])}
     if me and me.id == j.client_id:
         props = db.query(JobProposal).filter(JobProposal.job_id == j.id).all()
         pw = names(db, [p.freelancer_id for p in props])
@@ -51,6 +53,7 @@ class JobIn(BaseModel):
     title: str = Field(..., min_length=3, max_length=200)
     description: str = Field("", max_length=5000)
     budget: float = Field(..., gt=0, le=10_000_000)
+    images: list[str] = Field(default_factory=list, max_length=5)
 
 
 @router.post("")
@@ -59,6 +62,7 @@ def post_job(body: JobIn, request: Request, db: Session = Depends(get_db)):
     j = Job(client_id=me.id, title=body.title.strip(), description=body.description.strip(), budget=to_money(body.budget))
     db.add(j)
     db.flush()
+    set_images(db, "job", j.id, body.images)
     status = submit(db, "job", j.id, me)
     db.commit()
     return {"id": j.id, "mod_status": status}

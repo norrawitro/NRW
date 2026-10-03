@@ -12,7 +12,7 @@ import os
 from app.routers import iot, shop, admin, game, members, news, wallet, cloud, ai
 from app.routers import manage, logistics, market, token, analytics
 from app.routers import chat, course, jobs, workspace, ads, video, games, events, creator, iot_devices, health
-from app.routers import moderation_admin
+from app.routers import moderation_admin, media, wanted
 from app.database import engine, Base
 from app.models import User, Product, SensorData, Player  # register all models
 from app.models.wallet import Wallet, WalletTransaction   # register wallet models
@@ -56,8 +56,10 @@ app.include_router(cloud.router,   prefix="/cloud",   tags=["Cloud"])
 app.include_router(ai.router,      prefix="/ai",      tags=["AI"])
 app.include_router(manage.router,    prefix="/manage",    tags=["Manage (admin web)"])
 app.include_router(moderation_admin.router, prefix="/manage", tags=["Manage (admin web)"])
+app.include_router(media.router,     prefix="/media",     tags=["Media"])
 app.include_router(logistics.router, prefix="/logistics", tags=["Logistics"])
 app.include_router(market.router,    prefix="/market",    tags=["Market"])
+app.include_router(wanted.router,    prefix="/wanted",    tags=["Wanted"])
 app.include_router(token.router,     prefix="/token",     tags=["Token"])
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 # ช่วงที่ 3

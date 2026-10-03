@@ -9,7 +9,7 @@ registerModule('course', {
     this.el = el; this.cid = null;
     const d = await api('/course'); if(!d) return;
     el.innerHTML = `<div class="m-split"><div class="m-grid">${d.courses.map(c=>`<div class="m-card m-product">
-        ${modBadge(c.mod)}<b>${esc(c.title)}</b><p class="m-muted">${esc(c.description)}</p>
+        ${gallery(c.images, '🎓')}${modBadge(c.mod)}<b>${esc(c.title)}</b><p class="m-muted">${esc(c.description)}</p>
         <small class="m-muted">👩‍🏫 ${esc(c.instructor)} · ${c.lessons} บท · ${c.students} ผู้เรียน${c.progress?` · เรียนแล้ว ${c.progress}`:''}</small>
         <div class="m-row"><span class="m-price">${c.price>0?baht(c.price):'ฟรี'}</span>
         ${c.is_mine ? `<button class="btn-ghost m-sm" data-open="${c.id}">⚙️ จัดการ</button>`
@@ -17,6 +17,7 @@ registerModule('course', {
           : `<span><button class="btn-ghost m-sm" data-open="${c.id}">ดูบทเรียน</button> <button class="btn-primary m-sm" data-buy="${c.id}" data-price="${c.price}">${c.price>0?'🛒 ซื้อคอร์ส':'ลงทะเบียนฟรี'}</button></span>`}</div></div>`).join('') || '<p class="m-muted">ยังไม่มีคอร์ส</p>'}</div>
       <div class="m-card m-form"><h3>➕ เปิดคอร์สใหม่</h3><input id="crTitle" class="m-input" placeholder="ชื่อคอร์ส">
         <textarea id="crDesc" class="m-input" rows="3" placeholder="รายละเอียด"></textarea><input id="crPrice" class="m-input" type="number" min="0" placeholder="ราคา (0 = ฟรี)">
+        <label>รูปหน้าปกคอร์ส</label>${imagePicker('cr')}
         <button class="btn-primary" id="crNew">สร้างคอร์ส</button></div></div><div id="crDetail"></div>`;
     el.onclick = e=>this.click(e);
   },
@@ -37,7 +38,7 @@ registerModule('course', {
   },
   async create(){
     if(!State.me) return toast('กรุณาเข้าสู่ระบบก่อน');
-    const body = {title:document.getElementById('crTitle').value.trim(), description:document.getElementById('crDesc').value.trim(), price:+document.getElementById('crPrice').value||0};
+    const body = {title:document.getElementById('crTitle').value.trim(), description:document.getElementById('crDesc').value.trim(), price:+document.getElementById('crPrice').value||0, images:pickedImages('cr')};
     const r = await api('/course', {json:body});
     if(r){ toastSubmitted(r, 'สร้างคอร์สแล้ว เพิ่มบทเรียนได้เลย'); await this.render(this.el); this.open(r.id); }
   },

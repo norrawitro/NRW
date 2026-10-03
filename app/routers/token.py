@@ -72,3 +72,100 @@ def redeem(body: Redeem, request: Request, db: Session = Depends(get_db)):
     db.commit()
     w = get_wallet(db, me.id)
     return {"token": int(w.token or 0), "balance": float(w.balance or 0)}
+
+
+# ─── ตลาดโทเคน: ประกาศซื้อ / ประกาศขาย ───────────────────────────
+from app.models.wallet import TokenOffer
+from app.services.helpers import names, fmt
+from app.services.wallet_ops import to_money
+
+OFFER_SIDES = {"sell": "ขาย", "buy": "ซื้อ"}
+
+
+def offer_dict(o: TokenOffer, who: dict, me) -> dict:
+    return {"id": o.id, "side": o.side, "side_label": OFFER_SIDES[o.side], "price": float(o.price),
+            "amount": o.amount, "remaining": o.remaining, "status": o.status, "owner": who.get(o.user_id, "—"),
+            "is_mine": bool(me and me.id == o.user_id), "date": fmt(o.created_at)}
+
+
+@router.get("/offers")
+def list_offers(request: Request, mine: bool = False, db: Session = Depends(get_db)):
+    """ประกาศที่เปิดอยู่ — ขายเรียงราคาถูกก่อน, ซื้อเรียงราคาสูงก่อน"""
+    me = current_user(request, db)
+    q = db.query(TokenOffer)
+    q = q.filter(TokenOffer.user_id == me.id) if mine else q.filter(TokenOffer.status == "open")
+    rows = q.order_by(TokenOffer.id.desc()).limit(200).all()
+    who = names(db, [o.user_id for o in rows])
+    sells = sorted([o for o in rows if o.side == "sell"], key=lambda o: o.price)
+    buys = sorted([o for o in rows if o.side == "buy"], key=lambda o: -o.price)
+    return {"sell": [offer_dict(o, who, me) for o in sells], "buy": [offer_dict(o, who, me) for o in buys]}
+
+
+class OfferIn(BaseModel):
+    side: str = Field(..., pattern="^(sell|buy)$")
+    amount: int = Field(..., ge=1, le=10_000_000)
+    price: float = Field(..., gt=0, le=1_000_000)       # บาท/โทเคน
+
+
+@router.post("/offers")
+def create_offer(body: OfferIn, request: Request, db: Session = Depends(get_db)):
+    me = current_user(request, db)
+    price = to_money(body.price)
+    if price <= 0:
+        raise HTTPException(status_code=400, detail="ราคาต้องมากกว่า 0")
+    o = TokenOffer(user_id=me.id, side=body.side, price=price, amount=body.amount, remaining=body.amount, status="open")
+    db.add(o)
+    db.flush()
+    if body.side == "sell":
+        move_tokens(db, me.id, -body.amount, "transfer_out", f"พักโทเคนสำหรับประกาศขาย #{o.id}")
+    else:
+        move_money(db, me.id, -(price * body.amount), "token_offer", f"พักเงินสำหรับประกาศซื้อโทเคน #{o.id}")
+    db.commit()
+    return offer_dict(o, names(db, [me.id]), me)
+
+
+class TakeIn(BaseModel):
+    amount: int = Field(..., ge=1, le=10_000_000)
+
+
+@router.post("/offers/{offer_id}/take")
+def take_offer(offer_id: int, body: TakeIn, request: Request, db: Session = Depends(get_db)):
+    """รับประกาศ — ซื้อจากประกาศขาย หรือ ขายให้ประกาศซื้อ (รับบางส่วนได้)"""
+    me = current_user(request, db)
+    o = db.query(TokenOffer).filter(TokenOffer.id == offer_id).with_for_update().first()
+    if not o or o.status != "open":
+        raise HTTPException(status_code=404, detail="ประกาศนี้ปิดแล้ว")
+    if o.user_id == me.id:
+        raise HTTPException(status_code=400, detail="รับประกาศของตัวเองไม่ได้")
+    if body.amount > o.remaining:
+        raise HTTPException(status_code=400, detail=f"ประกาศนี้เหลือ {o.remaining:,} โทเคน")
+    total = Decimal(str(o.price)) * body.amount
+    if o.side == "sell":        # ฉันซื้อ: จ่ายเงินให้ผู้ขาย, รับโทเคนที่พักไว้
+        move_money(db, me.id, -total, "token_trade", f"ซื้อ {body.amount:,} โทเคน (ประกาศ #{o.id})")
+        move_money(db, o.user_id, total, "token_trade", f"ขาย {body.amount:,} โทเคน (ประกาศ #{o.id})")
+        move_tokens(db, me.id, body.amount, "transfer_in", f"ซื้อจากประกาศ #{o.id}")
+    else:                       # ฉันขาย: ให้โทเคนผู้ซื้อ, รับเงินที่พักไว้
+        move_tokens(db, me.id, -body.amount, "transfer_out", f"ขายให้ประกาศซื้อ #{o.id}")
+        move_tokens(db, o.user_id, body.amount, "transfer_in", f"ได้จากประกาศซื้อ #{o.id}")
+        move_money(db, me.id, total, "token_trade", f"ขาย {body.amount:,} โทเคน (ประกาศ #{o.id})")
+    o.remaining -= body.amount
+    if o.remaining == 0:
+        o.status = "filled"
+    db.commit()
+    return {"total": float(total), "remaining": o.remaining}
+
+
+@router.post("/offers/{offer_id}/cancel")
+def cancel_offer(offer_id: int, request: Request, db: Session = Depends(get_db)):
+    me = current_user(request, db)
+    o = db.query(TokenOffer).filter(TokenOffer.id == offer_id, TokenOffer.user_id == me.id).with_for_update().first()
+    if not o or o.status != "open":
+        raise HTTPException(status_code=404, detail="ไม่พบประกาศที่เปิดอยู่ของคุณ")
+    if o.remaining:
+        if o.side == "sell":
+            move_tokens(db, me.id, o.remaining, "transfer_in", f"คืนโทเคน ยกเลิกประกาศ #{o.id}")
+        else:
+            move_money(db, me.id, Decimal(str(o.price)) * o.remaining, "refund", f"คืนเงิน ยกเลิกประกาศซื้อ #{o.id}")
+    o.status = "cancelled"
+    db.commit()
+    return {"ok": True}

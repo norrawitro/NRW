@@ -17,7 +17,7 @@ from app.services.helpers import now
 
 ENABLED = os.getenv("MODERATION", "on").lower() not in ("off", "0", "false", "no")
 
-LABELS = {"post": "📰 โพสต์ข่าวสาร", "product": "🛒 สินค้า", "listing": "♻️ ประกาศมือสอง", "course": "🎓 คอร์สเรียน",
+LABELS = {"post": "📰 โพสต์ข่าวสาร", "product": "🛒 สินค้า", "listing": "♻️ ประกาศมือสอง", "wanted": "🔎 ประกาศซื้อ", "course": "🎓 คอร์สเรียน",
           "job": "💼 งานฟรีแลนซ์", "ad": "📢 โฆษณา", "video": "🎥 วิดีโอ", "event": "🎫 กิจกรรม",
           "creator_post": "⭐ โพสต์ครีเอเตอร์", "health": "🏃 หลักฐานออกกำลังกาย"}
 

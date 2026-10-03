@@ -48,7 +48,7 @@ registerModule('shop', {
     this.products = d ? d.products : [];
     document.getElementById('shopGrid').innerHTML = this.products.length ? this.products.map(p=>`
       <div class="m-card m-product">
-        ${p.image_url ? `<img src="${esc(p.image_url)}" alt="" loading="lazy">` : '<div class="m-noimg">🛍️</div>'}
+        ${gallery(p.images, '🛍️')}
         <b>${esc(p.name)}</b><p class="m-muted">${esc(p.description)}</p><small class="m-muted">🏪 ${esc(p.seller)}</small>
         <div class="m-row"><span class="m-price">${baht(p.price)}</span><span class="m-muted">เหลือ ${p.stock}</span></div>
         <button class="btn-primary" data-add="${p.id}" ${p.stock<1?'disabled':''}>${p.stock<1?'หมด':'ใส่ตะกร้า'}</button></div>`).join('')
@@ -107,26 +107,18 @@ registerModule('shop', {
   showForm(p){
     this.editing = p || null;
     document.getElementById('shBody').innerHTML = `<div class="m-card m-form" style="max-width:520px"><h3>${p?`✏️ แก้ไขสินค้า`:'➕ ลงสินค้าใหม่'}</h3>
-      <label>รูปสินค้า<input id="pfFile" class="m-input" type="file" accept="image/*"></label>
-      <div id="pfPreview">${p&&p.image_url?`<img src="${esc(p.image_url)}" class="m-thumb">`:''}</div>
+      <label>รูปสินค้า</label>${imagePicker('pf', p ? (p.images||[]) : [])}
       <label>ชื่อสินค้า<input id="pfName" class="m-input" maxlength="200" value="${esc(p?p.name:'')}"></label>
       <label>รายละเอียด<textarea id="pfDesc" class="m-input" rows="3">${esc(p?p.description:'')}</textarea></label>
       <label>ราคา (บาท)<input id="pfPrice" class="m-input" type="number" min="1" step="0.01" value="${p?p.price:''}"></label>
       <label>จำนวนในสต็อก<input id="pfStock" class="m-input" type="number" min="0" value="${p?p.stock:1}"></label>
       <label><input type="checkbox" id="pfActive" ${!p||p.is_active?'checked':''}> เปิดขาย</label>
       <button class="btn-primary m-full" id="pfSave">${p?'บันทึก':'ลงขาย'}</button></div>`;
-    this.imageUrl = p ? p.image_url : '';
-    document.getElementById('pfFile').onchange = async e=>{
-      const f = e.target.files[0]; if(!f) return;
-      const fd = new FormData(); fd.append('file', f);
-      const r = await api('/shop/images', {method:'POST', body:fd});
-      if(r){ this.imageUrl = r.url; document.getElementById('pfPreview').innerHTML = `<img src="${esc(r.url)}" class="m-thumb">`; }
-    };
   },
   async save(){
     const body = {name:document.getElementById('pfName').value.trim(), description:document.getElementById('pfDesc').value.trim(),
       price:+document.getElementById('pfPrice').value, stock:parseInt(document.getElementById('pfStock').value,10)||0,
-      image_url:this.imageUrl||'', is_active:document.getElementById('pfActive').checked};
+      images:pickedImages('pf'), image_url:pickedImages('pf')[0]||'', is_active:document.getElementById('pfActive').checked};
     if(!body.name || !(body.price>0)) return toast('กรุณาใส่ชื่อและราคา');
     const url = this.editing ? `/shop/my/products/${this.editing.id}` : '/shop/my/products';
     const r = await api(url, {method:this.editing?'PUT':'POST', json:body});
