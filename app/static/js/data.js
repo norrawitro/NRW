@@ -38,7 +38,7 @@ const MODULES = [
 
 const META_ITEMS = [
   {id:'profile', label:'ตั้งค่าสมาชิก', icon:'👤', href:'/members/profile'},
-  {id:'help',    label:'คู่มือการใช้งาน', icon:'❓', href:'#'},
+  {id:'help',    label:'คู่มือการใช้งาน', icon:'❓', view:'info'},
 ];
 
 const POST_CATS = {

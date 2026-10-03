@@ -3,12 +3,13 @@
    EVENT WIRING
    ============================================================ */
 document.getElementById('hamburger').onclick = ()=>{
-  document.body.classList.toggle('sidebar-collapsed');
+  // มือถือ: เปิด/ปิดเมนูแบบลอย  ·  จอใหญ่: ซ่อน/แสดงเมนู
+  document.body.classList.toggle(window.innerWidth<=880 ? 'sidebar-open' : 'sidebar-collapsed');
 };
 document.getElementById('themeBtn').onclick = ()=>{
   State.dark = !State.dark;
-  document.documentElement.setAttribute('data-theme', State.dark?'dark':'');
-  document.getElementById('themeBtn').textContent = State.dark?'☀️':'🌙';
+  try{ localStorage.setItem('nrw_dark', JSON.stringify(State.dark)); }catch(e){}
+  applyTheme();
 };
 document.getElementById('drawerOverlay').onclick = closeDrawer;
 document.getElementById('drawerClose').onclick = closeDrawer;
@@ -55,7 +56,7 @@ document.addEventListener('click', async (e)=>{
 
   // ── data-view (SPA navigation) ────────────────────────────
   const viewEl = e.target.closest('[data-view]');
-  if(viewEl){ e.preventDefault(); showView(viewEl.dataset.view); return; }
+  if(viewEl){ e.preventDefault(); closeDrawer(); showView(viewEl.dataset.view, viewEl.dataset.anchor); return; }
 
   // ── data-module ───────────────────────────────────────────
   const modEl = e.target.closest('[data-module]');
@@ -63,7 +64,7 @@ document.addEventListener('click', async (e)=>{
     e.preventDefault();
     const m = MODULES.find(x=>x.id===modEl.dataset.module);
     if(!m) return;
-    if(m.phase===1){ showView(m.view); } else { openDrawer(m.id); }
+    if(isLive(m)){ showView(m.view||m.id); } else { openDrawer(m.id); }
     return;
   }
 
@@ -133,13 +134,15 @@ document.getElementById('txConfirm').onclick = async ()=>{
   if(!val || val<=0) return;
   const btn = document.getElementById('txConfirm');
   btn.disabled = true; btn.textContent = 'กำลังทำ…';
+  const note = document.getElementById('txNote').value.trim();
   const res = await DataLayer.addTransaction(
-    pendingTxType==='topup' ? 'เติมเงินเข้ากระเป๋า' : 'ถอนเงินออกจากกระเป๋า',
+    note || (pendingTxType==='topup' ? 'เติมเงินเข้ากระเป๋า' : 'ถอนเงินออกจากกระเป๋า'),
     val, pendingTxType
   );
-  btn.disabled = false; btn.textContent = 'ยืนยัน';
+  btn.disabled = false; btn.textContent = 'ส่งคำขอ';
   if(res === null) return;  // ผิดพลาด (alert แล้ว)
-  document.getElementById('txAmount').value='';
+  toast(pendingTxType==='topup' ? 'ส่งคำขอเติมเงินแล้ว — รอผู้ดูแลอนุมัติ' : 'ส่งคำขอถอนแล้ว — กันยอดไว้ รอผู้ดูแลโอน');
+  document.getElementById('txAmount').value=''; document.getElementById('txNote').value='';
   document.getElementById('txForm').classList.add('hidden');
   renderWallet(); updateWalletChips();
 };

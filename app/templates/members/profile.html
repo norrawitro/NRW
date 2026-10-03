@@ -14,7 +14,22 @@
       --violet:#8B5CF6;--cyan:#06B6D4;
       --radius:14px;--shadow:0 4px 24px rgba(0,0,0,.08);
     }
+    [data-theme="dark"]{--bg:#0E1020;--surface:#191C32;--surface-2:#21243F;--ink:#F2F3FA;--ink-soft:#9DA2C0;--line:#2C3052;--primary-soft:#262a52}
+    [data-theme="dark"] .topbar{background:rgba(25,28,50,.85)}
     body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+    .modal-bg{position:fixed;inset:0;background:rgba(10,12,30,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+    .modal-bg.open{display:flex}
+    .modal{background:var(--surface);border-radius:14px;padding:22px;width:100%;max-width:380px}
+    .modal h3{font-size:1rem;margin-bottom:12px}
+    .modal label{display:block;font-size:.78rem;font-weight:600;color:var(--ink-soft);margin:10px 0 4px}
+    .modal input{width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:.9rem}
+    .modal .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+    .modal .err{color:var(--danger);font-size:.8rem;margin-top:8px;min-height:1em}
+    .btn-p{padding:8px 16px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
+    .btn-g{padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-weight:600;cursor:pointer}
+    .soon-tag{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-soft);white-space:nowrap}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(22,24,43,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:.85rem;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none}
+    .toast.on{opacity:1}
 
     /* ── HEADER ── */
     .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;
@@ -144,9 +159,10 @@
 
 <!-- TOPBAR -->
 <header class="topbar">
-  <a href="/nora-web" class="topbar-brand">🌐 Nora-Web</a>
+  <a href="/" class="topbar-brand">🌐 Nora-Web</a>
   <div class="topbar-right">
-    <a href="/nora-web" class="btn-sm btn-home" title="กลับหน้าหลัก">🏠 หน้าหลัก</a>
+    {% if user.is_admin %}<a href="/manage" class="btn-sm btn-home" title="แผงผู้ดูแลระบบ">🛠️ ผู้ดูแล</a>{% endif %}
+    <a href="/" class="btn-sm btn-home" title="กลับหน้าหลัก">🏠 หน้าหลัก</a>
     <a href="/members/logout" class="btn-sm btn-logout" title="ออกจากระบบ">🚪 ออก</a>
   </div>
 </header>
@@ -181,19 +197,19 @@
 
       <div class="stat-grid">
         <div class="stat-box">
-          <div class="stat-num">0</div>
+          <div class="stat-num" id="st-posts">0</div>
           <div class="stat-lbl">โพสต์</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num">0</div>
-          <div class="stat-lbl">วันที่ใช้งาน</div>
+          <div class="stat-num" id="st-orders">0</div>
+          <div class="stat-lbl">ออเดอร์</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num">฿0</div>
+          <div class="stat-num" id="st-balance">฿0</div>
           <div class="stat-lbl">ยอดเงิน</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num">0</div>
+          <div class="stat-num" id="st-token">0</div>
           <div class="stat-lbl">โทเคน</div>
         </div>
       </div>
@@ -218,8 +234,8 @@
       <div class="info-grid">
         <div class="info-row">
           <span class="info-label">ชื่อ-นามสกุล</span>
-          <span class="info-value">{{ user.full_name }}</span>
-          <button class="edit-btn" title="แก้ไขชื่อ">✏️ แก้ไข</button>
+          <span class="info-value" id="v-full_name">{{ user.full_name }}</span>
+          <button class="edit-btn" data-edit="full_name" title="แก้ไขชื่อ">✏️ แก้ไข</button>
         </div>
         <div class="info-row">
           <span class="info-label">Username</span>
@@ -227,18 +243,18 @@
         </div>
         <div class="info-row">
           <span class="info-label">Email</span>
-          <span class="info-value">{{ user.email }}</span>
-          <button class="edit-btn" title="แก้ไข Email">✏️ แก้ไข</button>
+          <span class="info-value" id="v-email">{{ user.email }}</span>
+          <button class="edit-btn" data-edit="email" title="แก้ไข Email">✏️ แก้ไข</button>
         </div>
         <div class="info-row">
           <span class="info-label">เบอร์โทรศัพท์</span>
-          <span class="info-value">{{ user.phone or '—' }}</span>
-          <button class="edit-btn" title="แก้ไขเบอร์โทร">✏️ แก้ไข</button>
+          <span class="info-value" id="v-phone">{{ user.phone or '—' }}</span>
+          <button class="edit-btn" data-edit="phone" title="แก้ไขเบอร์โทร">✏️ แก้ไข</button>
         </div>
         <div class="info-row">
           <span class="info-label">รหัสผ่าน</span>
           <span class="info-value">••••••••</span>
-          <button class="edit-btn" title="เปลี่ยนรหัสผ่าน">🔑 เปลี่ยน</button>
+          <button class="edit-btn" data-edit="password" title="เปลี่ยนรหัสผ่าน">🔑 เปลี่ยน</button>
         </div>
         <div class="info-row">
           <span class="info-label">สถานะบัญชี</span>
@@ -262,79 +278,24 @@
     <!-- TAB: การตั้งค่า -->
     <div class="sec" id="tab-settings">
       <div class="sec-title">⚙️ การตั้งค่าส่วนตัว</div>
-
-      <div class="settings-group">
-        <h4>🔔 การแจ้งเตือน</h4>
-        <div class="setting-row">
-          <div class="setting-info">
-            <h5>แจ้งเตือนข่าวสารใหม่</h5>
-            <p>รับการแจ้งเตือนเมื่อมีประกาศหรือข่าวสารใหม่</p>
-          </div>
-          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-info">
-            <h5>แจ้งเตือนธุรกรรม</h5>
-            <p>รับการแจ้งเตือนทุกครั้งที่มีการเคลื่อนไหวในกระเป๋าเงิน</p>
-          </div>
-          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-info">
-            <h5>แจ้งเตือนระบบใหม่</h5>
-            <p>รับการแจ้งเตือนเมื่อมีระบบที่ติดตามพร้อมใช้งาน</p>
-          </div>
-          <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
-        </div>
-      </div>
-
-      <div class="settings-group">
-        <h4>🎨 การแสดงผล</h4>
-        <div class="setting-row">
-          <div class="setting-info">
-            <h5>โหมดกลางคืน</h5>
-            <p>เปลี่ยนธีมเป็นสีเข้มเพื่อถนอมสายตา</p>
-          </div>
-          <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-info">
-            <h5>ภาษา</h5>
-            <p>ภาษาที่ใช้แสดงผลในระบบ</p>
-          </div>
-          <select style="padding:6px 10px;border-radius:8px;border:1.5px solid var(--line);font-size:.83rem;background:var(--surface-2);color:var(--ink)">
-            <option>🇹🇭 ภาษาไทย</option>
-            <option>🇬🇧 English</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="settings-group">
-        <h4>🔐 ความปลอดภัย</h4>
-        <div class="setting-row">
-          <div class="setting-info">
-            <h5>การยืนยันตัวตนสองขั้นตอน (2FA)</h5>
-            <p>เพิ่มความปลอดภัยให้บัญชีด้วย OTP</p>
-          </div>
-          <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div class="setting-info">
-            <h5>บันทึกการเข้าสู่ระบบ</h5>
-            <p>เก็บประวัติการ login ทั้งหมด</p>
-          </div>
-          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-      </div>
+      <div class="settings-group"><h4>🎨 การแสดงผล</h4>
+        <div class="setting-row"><div class="setting-info"><h5>โหมดกลางคืน</h5><p>ใช้ร่วมกับหน้าหลัก</p></div>
+          <label class="toggle"><input type="checkbox" id="darkToggle"><span class="slider"></span></label></div></div>
+      <div class="settings-group"><h4>🔐 ความปลอดภัย</h4>
+        <div class="setting-row"><div class="setting-info"><h5>เปลี่ยนรหัสผ่าน</h5><p>อย่างน้อย 8 ตัวอักษร</p></div><button class="edit-btn" data-edit="password">🔑 เปลี่ยน</button></div>
+        <div class="setting-row"><div class="setting-info"><h5>ยืนยันตัวตนสองขั้นตอน (2FA)</h5><p>เพิ่มความปลอดภัยด้วย OTP</p></div><span class="soon-tag">เร็วๆ นี้</span></div></div>
+      <div class="settings-group"><h4>🔔 การแจ้งเตือน</h4>
+        <div class="setting-row"><div class="setting-info"><h5>แจ้งเตือนข่าวสาร / ธุรกรรม</h5><p>ดูความเคลื่อนไหวได้ที่หน้ากระเป๋าเงินและข่าวสาร</p></div><span class="soon-tag">เร็วๆ นี้</span></div></div>
     </div>
 
     <!-- TAB: โพสต์ -->
     <div class="sec" id="tab-posts">
       <div class="sec-title">📰 โพสต์ที่เคยโพส</div>
-      <div class="empty-state">
+      <div id="myPosts"></div>
+      <div class="empty-state hidden-old" style="display:none">
         <div class="empty-ico">📭</div>
         <p>ยังไม่มีโพสต์</p>
-        <p style="font-size:.8rem;margin-top:6px">ไปที่หน้า <a href="/nora-web" style="color:var(--primary);font-weight:600">ข่าวสาร</a> เพื่อเขียนโพสต์แรกของคุณ</p>
+        <p style="font-size:.8rem;margin-top:6px">ไปที่หน้า <a href="/" style="color:var(--primary);font-weight:600">ข่าวสาร</a> เพื่อเขียนโพสต์แรกของคุณ</p>
       </div>
     </div>
 
@@ -365,35 +326,30 @@
     <div class="sec" id="tab-quick">
       <div class="sec-title">⚡ ฟีเจอร์ที่ใช้บ่อย</div>
       <div class="quick-grid">
-        <a href="/nora-web" class="quick-card" title="ไปยังหน้าข่าวสาร" onclick="sessionStorage.setItem('nrw_view','news');return true">
+        <a href="/#news" class="quick-card" title="ไปยังหน้าข่าวสาร">
           <div class="quick-ico">📰</div>
           <div class="quick-name">ข่าวสาร</div>
           <div class="quick-use">ใช้บ่อยที่สุด</div>
-          <div class="quick-bar"><div class="quick-fill" style="width:90%"></div></div>
         </a>
-        <a href="/nora-web" class="quick-card" title="ไปยังกระเป๋าเงิน">
+        <a href="/#wallet" class="quick-card" title="ไปยังกระเป๋าเงิน">
           <div class="quick-ico">💳</div>
           <div class="quick-name">กระเป๋าเงิน</div>
           <div class="quick-use">ธุรกรรมล่าสุด</div>
-          <div class="quick-bar"><div class="quick-fill" style="width:70%"></div></div>
         </a>
-        <a href="/nora-web" class="quick-card" title="ไปยังคลาวด์ส่วนตัว">
+        <a href="/#cloud" class="quick-card" title="ไปยังคลาวด์ส่วนตัว">
           <div class="quick-ico">☁️</div>
           <div class="quick-name">คลาวด์</div>
           <div class="quick-use">จัดการไฟล์</div>
-          <div class="quick-bar"><div class="quick-fill" style="width:55%"></div></div>
         </a>
-        <a href="/nora-web" class="quick-card" title="ไปยังศูนย์ AI">
+        <a href="/#ai" class="quick-card" title="ไปยังศูนย์ AI">
           <div class="quick-ico">🤖</div>
           <div class="quick-name">ศูนย์ AI</div>
           <div class="quick-use">ถามตอบอัตโนมัติ</div>
-          <div class="quick-bar"><div class="quick-fill" style="width:40%"></div></div>
         </a>
         <a href="/members/profile" class="quick-card" title="จัดการโปรไฟล์">
           <div class="quick-ico">👤</div>
           <div class="quick-name">โปรไฟล์</div>
           <div class="quick-use">ตั้งค่าบัญชี</div>
-          <div class="quick-bar"><div class="quick-fill" style="width:25%"></div></div>
         </a>
       </div>
     </div>
@@ -412,5 +368,10 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 </script>
+<div class="modal-bg" id="modalBg"><div class="modal"><h3 id="modalTitle"></h3>
+  <form id="modalForm"><div id="modalFields"></div><div class="err" id="modalErr"></div>
+  <div class="acts"><button type="button" class="btn-g" id="modalCancel">ยกเลิก</button><button type="submit" class="btn-p" id="modalSave">บันทึก</button></div></form></div></div>
+<div class="toast" id="toast"></div>
+<script src="/static/js/profile.js"></script>
 </body>
 </html>

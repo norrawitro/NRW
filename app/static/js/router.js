@@ -2,10 +2,15 @@
 /* ============================================================
    ROUTER
    ============================================================ */
-function showView(view){
+function showView(view, anchor){
+  if(!document.getElementById('view-'+view) && !MODULE_VIEWS[view]) view = 'home';
   State.view = view;
+  history.replaceState(null, '', view==='home' ? location.pathname : '#'+view);
+  State.anchor = anchor;
   document.querySelectorAll('.view-section').forEach(v=>v.classList.add('hidden'));
-  const target = document.getElementById('view-'+view);
+  document.body.classList.remove('sidebar-open');
+  let target = document.getElementById('view-'+view);
+  if(!target && MODULE_VIEWS[view]){ target = document.getElementById('view-module'); renderModuleView(view, target); }
   if(target) target.classList.remove('hidden');
   renderSidebar();
   window.scrollTo({top:0, behavior:'smooth'});
@@ -14,6 +19,18 @@ function showView(view){
   if(view==='wallet'){ fetchWallet().then(()=>{ renderWallet(); updateWalletChips(); }); }
   if(view==='ai'){ renderAIQuick(); renderAIMessages(); }
   if(view==='home'){ renderHomeFeed(); }
+}
+
+/** วาดหน้าของระบบที่ register ไว้ใน js/modules/ */
+function renderModuleView(id, el){
+  const m = MODULES.find(x=>x.id===id) || {icon:'ℹ️', label:MODULE_VIEWS[id].title||id, phase:1, code:'—', reason:''};
+  const ph = PHASES[m.phase];
+  el.innerHTML = `<div class="view-header">
+      <a class="back-link" href="#" data-view="home">← หน้าแรก</a>
+      <div><div class="view-title">${m.icon} ${esc(m.label)} ${m.code!=='—'?`<span class="m-phase" style="color:${ph.color}">รหัส ${m.code} · ช่วงที่ ${m.phase}</span>`:''}</div>
+        <div class="view-sub">${esc(MODULE_VIEWS[id].sub || m.reason || '')}</div></div>
+    </div><div id="moduleBody"></div>`;
+  MODULE_VIEWS[id].render(document.getElementById('moduleBody'));
 }
 
 /* ============================================================

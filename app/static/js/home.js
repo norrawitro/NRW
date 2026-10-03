@@ -8,8 +8,8 @@ function renderSidebar(){
     const items = MODULES.filter(m=>m.phase===phase);
     html += `<div class="nav-group-label"><span class="phase-dot" style="background:${PHASES[phase].color}"></span>${PHASES[phase].label}</div>`;
     items.forEach(m=>{
-      const locked = phase!==1;
-      html += `<a href="#" class="nav-item ${locked?'locked':''} ${State.view===m.view?'active':''}" data-module="${m.id}" title="${m.icon} ${m.label}${locked?' (ยังไม่เปิด)':''} — ${m.reason||''}">
+      const locked = !isLive(m);
+      html += `<a href="#" class="nav-item ${locked?'locked':''} ${State.view===(m.view||m.id)?'active':''}" data-module="${m.id}" title="${m.icon} ${m.label}${locked?' (ยังไม่เปิด)':''} — ${m.reason||''}">
         <span class="ic" style="background:${PHASES[phase].color}1a;color:${PHASES[phase].color}">${m.icon}</span>${m.label}
         ${locked?'<span class="soon">เร็วๆ นี้</span>':''}
       </a>`;
@@ -17,9 +17,15 @@ function renderSidebar(){
   });
   html += `<div class="nav-group-label">บัญชีของฉัน</div>`;
   META_ITEMS.forEach(m=>{
-    const isLink = m.href && m.href !== '#';
-    html += `<a ${isLink ? `href="${m.href}"` : 'href="#"'} class="nav-item" title="${m.icon} ${m.label}"${isLink ? '' : ''}><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">${m.icon}</span>${m.label}</a>`;
+    const attrs = m.view ? `href="#" data-view="${m.view}"` : `href="${m.href}"`;
+    html += `<a ${attrs} class="nav-item" title="${m.icon} ${m.label}"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">${m.icon}</span>${m.label}</a>`;
   });
+  if(State.me && State.me.is_admin){
+    html += `<a href="/manage" class="nav-item" title="แผงผู้ดูแลระบบ"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">🛠️</span>แผงผู้ดูแล</a>`;
+  }
+  if(State.me){
+    html += `<a href="/members/logout" class="nav-item" title="ออกจากระบบ"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">🚪</span>ออกจากระบบ</a>`;
+  }
   document.getElementById('sidebar').innerHTML = html;
 }
 
@@ -30,7 +36,7 @@ function renderPhaseLegend(){
 
 function renderLauncher(){
   document.getElementById('appGrid').innerHTML = MODULES.map(m=>{
-    const locked = m.phase!==1;
+    const locked = !isLive(m);
     return `<a href="#" class="app ${locked?'locked':''}" data-module="${m.id}" title="${m.icon} ${m.label}${locked?' — ยังไม่เปิด (เร็วๆ นี้)':''}\n${m.reason||''}">
       <div class="tile" style="background:${PHASES[m.phase].color}">${m.icon}${locked?'<span class="lock-badge">🔒</span>':''}</div>
       <div class="name">${m.label}</div>
@@ -46,8 +52,8 @@ async function renderHero(){
     {tag:'promo', label:'✨ ยินดีต้อนรับ', title:'Nora-Web — แพลตฟอร์มรวมทุกอย่างในที่เดียว', sub:'ระบบแกนกลางครบ 4 ระบบ · ข่าวสาร · คลาวด์ · กระเป๋าเงิน · AI', bg:'linear-gradient(135deg,#4F46E5,#8B5CF6)'},
   ];
   if(latest){
-    slides.push({tag:'news', label:'📢 ประกาศ', title: latest.text.slice(0,80) + (latest.text.length>80?'…':''),
-      sub:`${latest.author} · ${latest.when}`, bg:'linear-gradient(135deg,#059669,#10B981)'});
+    slides.push({tag:'news', label:'📢 ประกาศ', title: esc(latest.text.slice(0,80)) + (latest.text.length>80?'…':''),
+      sub:`${esc(latest.author)} · ${esc(latest.when)}`, bg:'linear-gradient(135deg,#059669,#10B981)'});
   }
   document.getElementById('hero').innerHTML = slides.map((s,i)=>`
     <div class="hero-slide ${i===0?'on':''}" style="background:${s.bg}">

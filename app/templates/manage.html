@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แผงผู้ดูแล — Nora-Web</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/home-news.css">
+  <link rel="stylesheet" href="/static/css/modules.css">
+  <style>body{padding:20px 16px}.wrap{max-width:1100px;margin:0 auto}header.mh{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+    header.mh h1{font-size:20px;margin-right:auto}.m-card{overflow-x:auto}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mh"><h1>🛠️ แผงผู้ดูแลระบบ</h1><a class="btn-ghost" href="/">← หน้าเว็บ</a><a class="btn-ghost" href="/#logistics">🚚 คิวจัดส่ง</a><a class="btn-ghost" href="/#analytics">📊 แดชบอร์ด</a></header>
+  <div class="m-tabs"><button class="m-tab on" data-tab="requests">💳 คำขอเงิน</button><button class="m-tab" data-tab="users">👥 สมาชิก</button><button class="m-tab" data-tab="products">🛒 สินค้า</button></div>
+  <div id="body"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/static/js/manage.js"></script>
+</body>
+</html>

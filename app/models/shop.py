@@ -1,0 +1,43 @@
+"""NRW Shop models — ออเดอร์ + รายการสินค้าในออเดอร์ + ประวัติการขนส่ง"""
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, Text
+from sqlalchemy.sql import func
+from app.database import Base
+
+ORDER_STATUSES = ["paid", "packed", "shipped", "delivered", "cancelled"]
+ORDER_STATUS_LABELS = {"paid": "ชำระแล้ว", "packed": "แพ็กแล้ว", "shipped": "ส่งแล้ว",
+                       "delivered": "ได้รับแล้ว", "cancelled": "ยกเลิก"}
+
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id         = Column(Integer, primary_key=True)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    total      = Column(Numeric(12, 2), nullable=False)
+    status     = Column(String(20), nullable=False, default="paid", index=True)
+    address    = Column(Text, nullable=False, default="")
+    tracking   = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+
+    id         = Column(Integer, primary_key=True)
+    order_id   = Column(Integer, ForeignKey("orders.id"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    name       = Column(String(200), nullable=False)      # ชื่อ ณ ตอนซื้อ
+    price      = Column(Numeric(12, 2), nullable=False)   # ราคา ณ ตอนซื้อ
+    qty        = Column(Integer, nullable=False)
+
+
+class ShipmentEvent(Base):
+    """เส้นทางพัสดุ — 1 แถวต่อการเปลี่ยนสถานะ"""
+    __tablename__ = "shipment_events"
+
+    id         = Column(Integer, primary_key=True)
+    order_id   = Column(Integer, ForeignKey("orders.id"), nullable=False, index=True)
+    status     = Column(String(20), nullable=False)
+    note       = Column(String(200), nullable=False, default="")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

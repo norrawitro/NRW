@@ -10,10 +10,12 @@ from jinja2 import Environment, FileSystemLoader
 import os
 
 from app.routers import iot, shop, admin, game, members, news, wallet, cloud, ai
+from app.routers import manage, logistics, market, token, analytics
 from app.database import engine, Base
 from app.models import User, Product, SensorData, Player  # register all models
 from app.models.wallet import Wallet, WalletTransaction   # register wallet models
 from app.models.cloud import CloudFolder, CloudFile       # register cloud models
+import app.models  # noqa: F401 — register all models (shop, market, ...)
 
 # Create all tables on startup
 try:
@@ -50,6 +52,11 @@ app.include_router(news.router,    prefix="/news",    tags=["News"])
 app.include_router(wallet.router,  prefix="/wallet",  tags=["Wallet"])
 app.include_router(cloud.router,   prefix="/cloud",   tags=["Cloud"])
 app.include_router(ai.router,      prefix="/ai",      tags=["AI"])
+app.include_router(manage.router,    prefix="/manage",    tags=["Manage (admin web)"])
+app.include_router(logistics.router, prefix="/logistics", tags=["Logistics"])
+app.include_router(market.router,    prefix="/market",    tags=["Market"])
+app.include_router(token.router,     prefix="/token",     tags=["Token"])
+app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/static/css/base.css">
   <link rel="stylesheet" href="/static/css/home-news.css">
   <link rel="stylesheet" href="/static/css/views.css">
+  <link rel="stylesheet" href="/static/css/modules.css">
 </head>
 <body>
 
@@ -14,11 +15,11 @@
 <header class="header">
   <button class="hamburger" id="hamburger" title="เปิด/ปิด เมนูด้านข้าง"><span></span></button>
   <a href="#" class="brand" data-view="home" title="กลับหน้าแรก Nora-Web"><div class="brand-mark">S</div><div class="brand-name">Nora<span>-Web</span></div></a>
-  <div class="search"><span>🔍</span><input type="text" placeholder="ค้นหาทุกอย่าง…" title="ค้นหาระบบ บริการ หรือข้อมูลทั้งหมด"></div>
+  <div class="search"><span>🔍</span><input type="text" id="searchInput" autocomplete="off" placeholder="ค้นหาทุกอย่าง…"><div class="search-results hidden" id="searchResults"></div></div>
   <div class="header-right">
     <button class="chip wallet" data-view="wallet" title="กระเป๋าเงิน — ดูยอดและธุรกรรม"><span>💰</span><span id="walletChip">฿0</span></button>
     <button class="icon-btn" id="themeBtn" title="เปลี่ยนธีม สว่าง/มืด">🌙</button>
-    <div class="avatar" id="userAvatar" title="โปรไฟล์ของฉัน — คลิกเพื่อดูข้อมูลบัญชี" onclick="window.location.href='/members/profile'" style="cursor:pointer">ก</div>
+    <div class="avatar" id="userAvatar" title="เข้าสู่ระบบ" style="cursor:pointer">👤</div>
   </div>
 </header>
 
@@ -44,9 +45,9 @@
               <div class="ws-mini"><div class="k">สิทธิ์</div><div class="v">สมาชิก</div></div>
             </div>
           </div>
-          <div class="ws-card">
+          <div class="ws-card" id="memberBox">
             <div class="launcher-head"><h3>ระบบสมาชิก</h3></div>
-            <p style="font-size:14px; color:var(--ink-soft);">เข้าสู่ระบบเพื่อใช้งาน POS และบริการทั้งหมด</p>
+            <p style="font-size:14px; color:var(--ink-soft);">เข้าสู่ระบบเพื่อใช้งานกระเป๋าเงิน ร้านค้า และบริการทั้งหมด</p>
             <div style="margin-top:10px; display:flex; gap:8px;">
               <a href="/members/login" class="btn-primary" style="padding:7px 14px; font-size:13px;" title="เข้าสู่ระบบด้วย username และรหัสผ่าน">🔑 เข้าสู่ระบบ</a>
               <a href="/members/register" style="color:var(--primary); font-size:13px; font-weight:600;" title="สมัครสมาชิกใหม่ — ฟรี">สมัครสมาชิก</a>
@@ -73,14 +74,14 @@
       <!-- FOOTER -->
       <footer class="footer">
         <div class="foot-grid">
-          <div><h4>เกี่ยวกับ</h4><a href="#" title="เรียนรู้เพิ่มเติมเกี่ยวกับ Nora-Web">เกี่ยวกับNora-Web</a><a href="#" title="นโยบายความเป็นส่วนตัวของเรา">นโยบายความเป็นส่วนตัว</a><a href="#" title="เงื่อนไขและข้อตกลงการใช้งาน">เงื่อนไขการใช้งาน</a></div>
-          <div><h4>บริการ</h4><a data-view="wallet" title="ไปยังระบบจุดขาย POS">ระบบจุดขาย (POS)</a><a data-view="cloud" title="ไปยังคลาวด์ส่วนตัว">คลาวด์ส่วนตัว</a><a data-view="ai" title="ไปยังศูนย์ AI">ศูนย์ AI</a></div>
-          <div><h4>ช่วยเหลือ</h4><a href="#" title="คู่มือการใช้งาน Nora-Web">คู่มือการใช้งาน</a><a href="#" title="ติดต่อทีมงาน Nora-Web">ติดต่อทีมงาน</a></div>
-          <div><h4>ติดตาม</h4><a href="#" title="ช่องทางติดต่อและโซเชียล">ช่องทางติดต่อ</a></div>
+          <div><h4>เกี่ยวกับ</h4><a href="#" data-view="info" data-anchor="about">เกี่ยวกับNora-Web</a><a href="#" data-view="info" data-anchor="privacy">นโยบายความเป็นส่วนตัว</a><a href="#" data-view="info" data-anchor="terms">เงื่อนไขการใช้งาน</a></div>
+          <div><h4>บริการ</h4><a href="#" data-view="shop">ร้านค้าออนไลน์</a><a href="#" data-view="wallet">กระเป๋าเงิน</a><a data-view="cloud" title="ไปยังคลาวด์ส่วนตัว">คลาวด์ส่วนตัว</a><a data-view="ai" title="ไปยังศูนย์ AI">ศูนย์ AI</a></div>
+          <div><h4>ช่วยเหลือ</h4><a href="#" data-view="info" data-anchor="help">คู่มือการใช้งาน</a><a href="#" data-view="info" data-anchor="contact">ติดต่อทีมงาน</a></div>
+          <div><h4>ติดตาม</h4><a href="#" data-view="news">ข่าวสาร/ประกาศ</a></div>
         </div>
         <div class="foot-bottom">
           <span>© 2569 Nora-Web — แพลตฟอร์มรวมทุกบริการ</span>
-          <span>เปิดใช้งานแล้ว 4/20 ระบบ · ช่วงที่ 1 เสร็จสมบูรณ์</span>
+          <span id="liveCount"></span>
         </div>
       </footer>
     </div>
@@ -156,11 +157,14 @@
               <button class="btn-primary" id="topupBtn" style="flex:1;" title="เติมเงินเข้ากระเป๋า">➕ เติมเงิน</button>
               <button class="btn-ghost" id="withdrawBtn" style="flex:1;" title="ถอนเงินออกจากกระเป๋า">➖ ถอนเงิน</button>
             </div>
-            <div class="inline-form hidden" id="txForm">
-              <input type="number" id="txAmount" placeholder="จำนวนเงิน (บาท)" title="ใส่จำนวนเงินที่ต้องการ">
-              <button class="btn-primary" id="txConfirm" title="ยืนยันรายการ">ยืนยัน</button>
+            <div class="inline-form hidden" id="txForm" style="flex-wrap:wrap">
+              <input type="number" id="txAmount" min="1" step="0.01" placeholder="จำนวนเงิน (บาท)">
+              <input type="text" id="txNote" maxlength="200" placeholder="ช่องทาง / เลขบัญชี / เลขอ้างอิงสลิป" style="flex-basis:100%">
+              <button class="btn-primary" id="txConfirm">ส่งคำขอ</button>
             </div>
+            <p class="m-muted" style="margin-top:10px">เติม/ถอนเงินต้องรอผู้ดูแลตรวจสอบและอนุมัติ · คำขอถอนจะกันยอดไว้ทันที ถ้าถูกปฏิเสธจะคืนให้อัตโนมัติ</p>
           </div>
+          <div class="ws-card"><h4 style="font-size:13.5px;margin-bottom:8px;">คำขอล่าสุด</h4><div id="reqList"></div></div>
         </div>
         <div>
           <div class="section-title"><h2>ประวัติธุรกรรม</h2></div>
@@ -190,6 +194,9 @@
       </div>
     </div>
 
+    <!-- ============ VIEW: ระบบอื่น ๆ (วาดโดย js/modules/*.js) ============ -->
+    <div class="view-section hidden" id="view-module"></div>
+
   </main>
 </div>
 
@@ -200,7 +207,9 @@
   <div id="drawerContent"></div>
 </div>
 
+<div class="toast" id="toast"></div>
 <script src="/static/js/data.js"></script>
+<script src="/static/js/core.js"></script>
 <script src="/static/js/api.js"></script>
 <script src="/static/js/home.js"></script>
 <script src="/static/js/news.js"></script>
@@ -209,6 +218,14 @@
 <script src="/static/js/ai.js"></script>
 <script src="/static/js/router.js"></script>
 <script src="/static/js/events.js"></script>
+<!-- ระบบที่เปิดเพิ่ม: 1 ไฟล์ต่อ 1 ระบบ -->
+<script src="/static/js/modules/info.js"></script>
+<script src="/static/js/modules/search.js"></script>
+<script src="/static/js/modules/shop.js"></script>
+<script src="/static/js/modules/logistics.js"></script>
+<script src="/static/js/modules/market.js"></script>
+<script src="/static/js/modules/token.js"></script>
+<script src="/static/js/modules/analytics.js"></script>
 <script src="/static/js/main.js"></script>
 </body>
 </html>

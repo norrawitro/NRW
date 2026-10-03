@@ -5,7 +5,7 @@ async function fetchWallet(){
     const r = await fetch('/wallet');
     if(r.status===401){ return State.wallet; }
     const d = await r.json();
-    State.wallet = {balance:d.balance, token:d.token, tx:d.tx};
+    State.wallet = {balance:d.balance, token:d.token, tx:d.tx, requests:d.requests||[]};
   } catch(e){}
   return State.wallet;
 }

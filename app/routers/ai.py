@@ -51,6 +51,12 @@ def _build_context(db: Session, user: User) -> str:
     total_bytes = sum(f.size or 0 for f in
                       db.query(CloudFile).filter(CloudFile.user_id == user.id).all())
     lines.append(f"- พื้นที่คลาวด์: ใช้ไป {total_bytes/1024/1024:.1f} MB จาก 50 GB")
+    # latest order
+    from app.models.shop import Order, ORDER_STATUS_LABELS
+    o = db.query(Order).filter(Order.user_id == user.id).order_by(Order.id.desc()).first()
+    if o:
+        lines.append(f"- ออเดอร์ล่าสุด: #{o.id} ยอด {float(o.total):,.2f} บาท สถานะ {ORDER_STATUS_LABELS.get(o.status, o.status)}"
+                     + (f" เลขพัสดุ {o.tracking}" if o.tracking else ""))
     # latest news (3 posts)
     posts = db.query(Post).filter(Post.is_deleted.is_(False)) \
         .order_by(Post.created_at.desc()).limit(3).all()
