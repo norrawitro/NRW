@@ -16,6 +16,7 @@
 | `home-news.css` | หน้าแรก (hero, การ์ด, ไอคอนระบบ), ข่าวสาร (โพสต์, ความเห็น) |
 | `views.css` | คลาวด์, กระเป๋าเงิน, AI, drawer, footer, responsive (มือถือ) |
 | `modules.css` | ส่วนประกอบของระบบใหม่ (การ์ด, ตาราง, ฟอร์ม, แท็บ, กราฟแท่ง), ช่องค้นหา, toast |
+| `modules2.css` | แชท, คอร์ส, บอร์ดงาน, เกม, วิดีโอ, โฆษณา, IoT, สุขภาพ |
 
 ## JavaScript — `app/static/js/` (โหลดตามลำดับนี้ ใช้ตัวแปรร่วมกัน)
 | ไฟล์ | มีอะไร | ถ้าจะแก้เรื่อง… |
@@ -41,7 +42,18 @@
 | `logistics.js` | 🚚 คลังสินค้า/ขนส่ง (ติดตามพัสดุ, คิวจัดส่ง, สต็อก) | `app/routers/logistics.py` |
 | `market.js` | ♻️ มือสอง/เช่า | `app/routers/market.py` |
 | `token.js` | 🪙 โทเคน (โอน, แลกเป็นเงิน) | `app/routers/token.py` |
-| `analytics.js` | 📊 แดชบอร์ดวิเคราะห์ | `app/routers/analytics.py` |
+| `analytics.js` | 📊 แดชบอร์ดวิเคราะห์ (+ ฟังก์ชันกราฟ `bars()` / `stat()` ที่ระบบอื่นใช้ด้วย) | `app/routers/analytics.py` |
+| `chat.js` | 💬 แชทเรียลไทม์ (ห้องรวม + DM, ดึงข้อความทุก 3 วิ) | `app/routers/chat.py` |
+| `course.js` | 🎓 คอร์สเรียนออนไลน์ | `app/routers/course.py` |
+| `jobs.js` | 💼 ตลาดงาน/ฟรีแลนซ์ (พักเงิน) | `app/routers/jobs.py` |
+| `workspace.js` | 🧩 พื้นที่ทำงานร่วมกัน (บอร์ดงาน + โน้ต) | `app/routers/workspace.py` |
+| `ads.js` | 📢 โฆษณา (+ `loadHomeAd()` โฆษณาบนหน้าแรก) | `app/routers/ads.py` |
+| `video.js` | 🎥 วิดีโอความรู้ | `app/routers/video.py` |
+| `games.js` | 🎮 เกม (จับคู่ภาพ, คิดเลขเร็ว) + ตารางอันดับ | `app/routers/games.py` |
+| `events.js` | 🎫 กิจกรรม/ตั๋ว/เช็คอิน | `app/routers/events.py` |
+| `creator.js` | ⭐ ครีเอเตอร์/สมาชิก VIP | `app/routers/creator.py` |
+| `iot.js` | 📡 อุปกรณ์ IoT ของสมาชิก | `app/routers/iot_devices.py` |
+| `health.js` | 🏃 สุขภาพ/ออกกำลังกาย + โค้ช AI | `app/routers/health.py` |
 
 **เปิดระบบใหม่:** สร้าง `js/modules/<id>.js` → เรียก `registerModule('<id>', {sub:'...', render(el){...}})`
 → ใส่ `<script>` ใน `nora-web.html` (ก่อน `main.js`) — ระบบจะปลดล็อกในเมนูเองอัตโนมัติ (`id` ต้องตรงกับใน `MODULES`)
@@ -54,13 +66,17 @@
 
 ## API ฝั่ง server — `app/routers/`
 `news.py` ข่าวสาร · `wallet.py` กระเป๋าเงิน · `cloud.py` คลาวด์ · `ai.py` AI (Ollama) · `members.py` สมาชิก ·
-`manage.py` แผงผู้ดูแล · `shop.py` · `logistics.py` · `market.py` · `token.py` · `analytics.py`
+`manage.py` แผงผู้ดูแล · `shop.py` · `logistics.py` · `market.py` · `token.py` · `analytics.py` ·
+`chat.py` · `course.py` · `jobs.py` · `workspace.py` · `ads.py` · `video.py` · `games.py` · `events.py` · `creator.py` · `iot_devices.py` · `health.py`
+ตาราง: `app/models/shop.py`, `market.py` (ช่วง 2) · `work.py` (ช่วง 3) · `community.py` (ช่วง 4)
 
 ตัวช่วยฝั่ง server: `app/deps.py` (ผู้ใช้ที่ login / admin) · `app/services/wallet_ops.py` (เพิ่ม/หักเงินและโทเคน — **ทุกระบบที่มีการจ่ายเงินต้องใช้ตัวนี้**)
 
 ## กฎสำคัญ
 - เงิน/โทเคน: ใช้ `move_money()` / `move_tokens()` เท่านั้น (ล็อกแถว + กันยอดติดลบ + บันทึกประวัติ) แล้ว `db.commit()` ครั้งเดียวตอนจบ
-- ทดสอบหลังแก้: `python tests/smoke_phase2.py` (ใช้ฐานข้อมูลชั่วคราว ไม่แตะข้อมูลจริง) และ `bash verify.sh all`
+- ทดสอบหลังแก้: `python tests/smoke_phase2.py` และ `python tests/smoke_phase34.py` (ใช้ฐานข้อมูลชั่วคราว ไม่แตะข้อมูลจริง) และ `bash verify.sh all`
+- รีสตาร์ทหลังแก้ไฟล์ `.py`: `bash restart.sh` (ไฟล์ HTML/CSS/JS แค่ refresh หน้าเว็บ)
+- ลิงก์ที่ผู้ใช้ใส่ (เช่นโฆษณา) ต้องผ่าน `safe_link()` ใน `app/services/helpers.py` — กัน `javascript:`
 - ข้อความที่ผู้ใช้พิมพ์ (โพสต์, ชื่อไฟล์, ข้อความ AI) ต้องผ่าน `esc()` ก่อนใส่ใน `innerHTML` เสมอ — กันโดนแฮ็ก (XSS)
 - โฟลเดอร์กับไฟล์ในคลาวด์มี id ซ้ำกันได้ (คนละตาราง) — ส่ง `type` ไปด้วยเสมอเมื่อลบ
 - ไฟล์ JS ใช้ตัวแปรร่วมกัน ถ้าเพิ่มไฟล์ใหม่ต้องใส่ `<script>` ใน `nora-web.html` ให้ถูกลำดับ

@@ -18,7 +18,7 @@ function showView(view, anchor){
   if(view==='cloud'){ fetchCloud().then(()=>{ renderStorage(); renderBreadcrumb(); renderFileGrid(); }); }
   if(view==='wallet'){ fetchWallet().then(()=>{ renderWallet(); updateWalletChips(); }); }
   if(view==='ai'){ renderAIQuick(); renderAIMessages(); }
-  if(view==='home'){ renderHomeFeed(); }
+  if(view==='home'){ renderHomeFeed(); if(typeof loadHomeAd==='function') loadHomeAd(); }
 }
 
 /** วาดหน้าของระบบที่ register ไว้ใน js/modules/ */

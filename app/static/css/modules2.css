@@ -1,0 +1,27 @@
+/* modules2.css — ส่วนประกอบของระบบช่วงที่ 3–4 (แชท, คอร์ส, บอร์ดงาน, เกม, วิดีโอ, โฆษณา, IoT, สุขภาพ) */
+.m-grid-wide{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.m-product video,.m-lesson video{width:100%;border-radius:10px;background:#000;max-height:320px}
+.m-pre{white-space:pre-wrap;word-break:break-word;font-size:13.5px;background:var(--surface-2);border-radius:10px;padding:10px 12px;margin:8px 0}
+/* แชท */
+.m-chat-log{height:min(55vh,460px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px 10px}
+.m-msg{align-self:flex-start;max-width:78%;background:var(--surface-2);border-radius:14px 14px 14px 4px;padding:8px 12px;font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+.m-msg small{display:block;font-size:11px;color:var(--ink-soft);margin-bottom:2px}
+.m-msg.mine{align-self:flex-end;background:var(--primary);color:#fff;border-radius:14px 14px 4px 14px}
+.m-msg.mine small{color:rgba(255,255,255,.75)}
+/* คอร์ส */
+.m-lesson{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+.m-lesson summary{cursor:pointer;font-weight:600;font-size:14px}
+/* บอร์ดงาน */
+.m-kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.m-kanban .m-card{background:var(--surface-2);min-height:120px}
+.m-task{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:13.5px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+/* เกม */
+.m-memory{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:360px;margin:10px 0}
+.m-mcard{aspect-ratio:1;border-radius:12px;background:var(--primary);color:#fff;font-size:28px;font-weight:700;border:none;cursor:pointer}
+.m-mcard.up{background:var(--surface-2);color:var(--ink)}
+.m-quiz{font-size:34px;font-weight:700;text-align:center;padding:18px;color:var(--primary)}
+/* โฆษณา / AI / คำเตือน */
+.m-ad{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-left:4px solid var(--gold)}
+.m-ai{background:var(--primary-soft);border:none;margin-top:12px}
+.m-warn-box{background:rgba(245,158,11,.12);border-radius:10px;padding:10px;margin-top:10px;font-size:13px;word-break:break-all}
+@media (max-width:700px){.m-kanban{grid-template-columns:1fr}}

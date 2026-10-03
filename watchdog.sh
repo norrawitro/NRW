@@ -30,7 +30,8 @@ source venv/bin/activate
 
 while true; do
     log "starting uvicorn..."
-    uvicorn app.main:app --host 0.0.0.0 --port 8000 >> logs/uvicorn.log 2>&1 &
+    # --timeout-graceful-shutdown: ไม่ค้าง "Waiting for background tasks" ตอนรีสตาร์ท
+    uvicorn app.main:app --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 10 >> logs/uvicorn.log 2>&1 &
     UVICORN_PID=$!
     log "uvicorn started (pid $UVICORN_PID)"
     start_health_check

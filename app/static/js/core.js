@@ -15,6 +15,7 @@ async function api(url, opts={}){
   let data = null;
   try{ data = await r.json(); }catch(e){}
   if(r.status===401){ toast('กรุณาเข้าสู่ระบบก่อน'); return null; }
+  if(r.status===422){ toast('ข้อมูลไม่ครบหรือสั้นเกินไป กรุณาตรวจสอบอีกครั้ง'); return null; }
   if(!r.ok){ toast((data && typeof data.detail==='string') ? data.detail : 'เกิดข้อผิดพลาด'); return null; }
   return data;
 }
