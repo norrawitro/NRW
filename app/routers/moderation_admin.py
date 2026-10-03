@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.deps import current_admin
 from app.models.moderation import Moderation
+from app.models.wallet import WalletRequest
 from app.models.post import Post
 from app.models.product import Product
 from app.models.market import Listing
@@ -65,6 +66,15 @@ def preview(db: Session, kind: str, item_id: int) -> dict:
         d["images"] = imgs
         d.setdefault("image", imgs[0])
     return d
+
+
+@router.get("/api/pending-count")
+def pending_count(request: Request, db: Session = Depends(get_db)):
+    """ตัวเลขบนปุ่ม 🛡️ อนุมัติ ที่หัวเว็บ (เฉพาะผู้ดูแล)"""
+    current_admin(request, db)
+    content = db.query(Moderation).filter(Moderation.status == "pending").count()
+    money = db.query(WalletRequest).filter(WalletRequest.status == "pending").count()
+    return {"content": content, "money": money, "total": content + money}
 
 
 @router.get("/api/moderation")

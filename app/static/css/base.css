@@ -98,3 +98,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .main{flex:1;margin-left:var(--sidebar-w);padding:22px;min-width:0;}
 body.sidebar-collapsed .sidebar{transform:translateX(-100%)}
 body.sidebar-collapsed .main{margin-left:0}
+/* ปุ่ม 🛡️ อนุมัติ (เฉพาะผู้ดูแล) */
+.admin-chip{text-decoration:none;color:var(--ink);font-weight:700;font-size:13px}
+.admin-chip b{background:#e5484d;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px}
+.admin-chip b:empty{display:none}
+.nav-admin{font-weight:700;color:var(--primary)}
+.nav-admin .ic{background:var(--primary-soft)}
+.nav-admin .soon{background:#e5484d;color:#fff}
+.nav-admin .soon:empty{display:none}
+@media (max-width:640px){.admin-chip .admin-label{display:none}}

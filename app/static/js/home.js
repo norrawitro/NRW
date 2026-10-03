@@ -3,7 +3,9 @@
    RENDER: SIDEBAR
    ============================================================ */
 function renderSidebar(){
-  let html = `<a href="#" class="nav-item ${State.view==='home'?'active':''}" data-view="home" title="🏠 หน้าแรก — ภาพรวมทั้งหมด"><span class="ic" style="background:var(--primary-soft);color:var(--primary)">🏠</span>หน้าแรก</a>`;
+  let html = State.me && State.me.is_admin
+    ? `<a href="/manage" class="nav-item nav-admin" title="แผงผู้ดูแล — อนุมัติโพสต์ สินค้า ประกาศ และคำขอเงิน"><span class="ic">🛡️</span>แผงผู้ดูแล / อนุมัติ<b class="soon" id="adminNavCount">${State.adminCount||''}</b></a>` : '';
+  html += `<a href="#" class="nav-item ${State.view==='home'?'active':''}" data-view="home" title="🏠 หน้าแรก — ภาพรวมทั้งหมด"><span class="ic" style="background:var(--primary-soft);color:var(--primary)">🏠</span>หน้าแรก</a>`;
   [1,2,3,4].forEach(phase=>{
     const items = MODULES.filter(m=>m.phase===phase);
     html += `<div class="nav-group-label"><span class="phase-dot" style="background:${PHASES[phase].color}"></span>${PHASES[phase].label}</div>`;
@@ -20,9 +22,6 @@ function renderSidebar(){
     const attrs = m.view ? `href="#" data-view="${m.view}"` : `href="${m.href}"`;
     html += `<a ${attrs} class="nav-item" title="${m.icon} ${m.label}"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">${m.icon}</span>${m.label}</a>`;
   });
-  if(State.me && State.me.is_admin){
-    html += `<a href="/manage" class="nav-item" title="แผงผู้ดูแลระบบ"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">🛠️</span>แผงผู้ดูแล</a>`;
-  }
   if(State.me){
     html += `<a href="/members/logout" class="nav-item" title="ออกจากระบบ"><span class="ic" style="background:var(--surface-2);color:var(--ink-soft)">🚪</span>ออกจากระบบ</a>`;
   }

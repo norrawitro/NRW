@@ -88,6 +88,8 @@ check("ยังไม่อนุมัติ คนอื่นไม่เห
 check("ยังไม่อนุมัติ ยื่นข้อเสนอไม่ได้", ann.post(f"/wanted/posts/{w['id']}/offers", json={"price": 400}).status_code == 404)
 check("เจ้าของเห็นในประกาศของฉัน", bob.get("/wanted/posts?mine=true").json()["posts"][0]["mod"]["status"] == "pending")
 check("คิวผู้ดูแลมีประกาศซื้อ + รูป", any(i["kind"] == "wanted" and i.get("image") == img for i in boss.get("/manage/api/moderation").json()["items"]))
+check("ตัวนับรออนุมัติของผู้ดูแล", boss.get("/manage/api/pending-count").json()["content"] >= 1)
+check("สมาชิกทั่วไปดูตัวนับไม่ได้", ann.get("/manage/api/pending-count").status_code in (401, 403))
 approve_all()
 check("อนุมัติแล้วแสดงต่อสาธารณะ", ann.get("/wanted/posts").json()["posts"][0]["title"] == "หาซื้อจักรยาน")
 check("ยื่นข้อเสนอให้ตัวเองไม่ได้", bob.post(f"/wanted/posts/{w['id']}/offers", json={"price": 1}).status_code == 400)

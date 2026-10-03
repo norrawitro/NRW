@@ -61,6 +61,21 @@ function renderMe(){
         <a href="/members/logout" style="color:var(--ink-soft);font-size:13px;font-weight:600;">ออกจากระบบ</a></div>`;
   }
   renderSidebar();
+  loadAdminCount();
+}
+/** ผู้ดูแล: ปุ่ม 🛡️ อนุมัติ ที่หัวเว็บ + จำนวนที่รออนุมัติ (อัปเดตทุก 60 วินาที) */
+async function loadAdminCount(){
+  const chip = document.getElementById('adminChip'); if(!chip) return;
+  chip.classList.toggle('hidden', !(State.me && State.me.is_admin));
+  if(!(State.me && State.me.is_admin)) return;
+  try{
+    const r = await fetch('/manage/api/pending-count', {credentials:'same-origin'}); if(!r.ok) return;
+    const d = await r.json(), n = d.total ? String(d.total) : ''; State.adminCount = n;
+    document.getElementById('adminCount').textContent = n;
+    const nav = document.getElementById('adminNavCount'); if(nav) nav.textContent = n;
+    chip.title = `รออนุมัติ: เนื้อหา ${d.content} · คำขอเงิน ${d.money}`;
+  }catch(e){}
+  clearTimeout(loadAdminCount.t); loadAdminCount.t = setTimeout(loadAdminCount, 60000);
 }
 
 /* ── ธีมมืด: จำไว้ในเบราว์เซอร์ (ใช้ key เดียวกับหน้าโปรไฟล์) ───── */
