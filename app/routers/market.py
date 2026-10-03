@@ -15,6 +15,7 @@ from app.deps import current_user, optional_user
 from app.models.user import User
 from app.models.market import Listing, Deal
 from app.services.wallet_ops import move_money, to_money
+from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 
 router = APIRouter()
 STATUS_LABELS = {"active": "เปิดอยู่", "sold": "ขายแล้ว", "rented": "ถูกเช่าอยู่", "closed": "ปิดแล้ว"}
@@ -25,7 +26,8 @@ def listing_dict(db: Session, l: Listing, me: User | None) -> dict:
     d = {"id": l.id, "kind": l.kind, "title": l.title, "description": l.description,
          "price": float(l.price), "status": l.status, "status_label": STATUS_LABELS.get(l.status, l.status),
          "seller": seller.full_name if seller else "—", "is_mine": bool(me and me.id == l.seller_id),
-         "date": l.created_at.strftime("%d/%m/%Y") if l.created_at else "—"}
+         "date": l.created_at.strftime("%d/%m/%Y") if l.created_at else "—",
+         "mod": badge(db, "listing", l.id) if (me and me.id == l.seller_id) else None}
     if l.status == "rented":
         deal = (db.query(Deal).filter(Deal.listing_id == l.id, Deal.returned_at.is_(None))
                   .order_by(Deal.id.desc()).first())
@@ -43,7 +45,9 @@ def list_listings(request: Request, mine: bool = False, db: Session = Depends(ge
         q = q.filter(Listing.seller_id == me.id)
     else:
         q = q.filter(Listing.status == "active")
-    return {"listings": [listing_dict(db, l, me) for l in q.order_by(Listing.id.desc()).limit(100).all()]}
+    hidden = set() if mine else hidden_ids(db, "listing")
+    rows = [l for l in q.order_by(Listing.id.desc()).limit(100).all() if l.id not in hidden]
+    return {"listings": [listing_dict(db, l, me) for l in rows]}
 
 
 class ListingIn(BaseModel):
@@ -59,6 +63,8 @@ def create_listing(body: ListingIn, request: Request, db: Session = Depends(get_
     l = Listing(seller_id=me.id, kind=body.kind, title=body.title.strip(),
                 description=body.description.strip(), price=to_money(body.price), status="active")
     db.add(l)
+    db.flush()
+    submit(db, "listing", l.id, me)
     db.commit()
     db.refresh(l)
     return listing_dict(db, l, me)
@@ -90,6 +96,7 @@ def make_deal(listing_id: int, body: DealIn, request: Request, db: Session = Dep
         raise HTTPException(status_code=404, detail="ประกาศนี้ไม่เปิดแล้ว")
     if l.seller_id == me.id:
         raise HTTPException(status_code=400, detail="ซื้อ/เช่าของตัวเองไม่ได้")
+    ensure_visible(db, "listing", l.id, l.seller_id, None, "ประกาศนี้")
     days = body.days if l.kind == "rent" else 0
     total = Decimal(str(l.price)) * (days if l.kind == "rent" else 1)
     action = f"เช่า {days} วัน" if l.kind == "rent" else "ซื้อ"

@@ -6,7 +6,7 @@ registerModule('ads', {
   async render(el){
     if(!State.me) return loginGate(el, 'ระบบโฆษณา');
     const d = await api('/ads'); if(!d) return;
-    el.innerHTML = `<div class="m-split"><div class="m-card"><h3>📢 โฆษณาของฉัน</h3>${d.ads.map(a=>`<div class="m-row"><span><b>${esc(a.title)}</b><br><small class="m-muted">ถึง ${esc(a.ends)} · แสดง ${a.views} · คลิก ${a.clicks}</small></span>
+    el.innerHTML = `<div class="m-split"><div class="m-card"><h3>📢 โฆษณาของฉัน</h3>${d.ads.map(a=>`<div class="m-row"><span><b>${esc(a.title)}</b> ${modBadge(a.mod)}<br><small class="m-muted">ถึง ${esc(a.ends)} · แสดง ${a.views} · คลิก ${a.clicks}</small></span>
         <span class="badge ${a.running?'st-approved':'st-rejected'}">${a.running?'กำลังแสดง':'หยุดแล้ว'}</span></div>`).join('') || '<p class="m-muted">ยังไม่มีโฆษณา</p>'}</div>
       <div class="m-card m-form"><h3>➕ ซื้อโฆษณา (${baht(d.price_per_day)}/วัน)</h3><input id="adTitle" class="m-input" maxlength="100" placeholder="หัวข้อ">
         <input id="adText" class="m-input" maxlength="300" placeholder="ข้อความ"><input id="adLink" class="m-input" placeholder="ลิงก์ https://… (ไม่บังคับ)">
@@ -16,7 +16,8 @@ registerModule('ads', {
         const days = +document.getElementById('adDays').value;
         if(!confirm(`ซื้อโฆษณา ${days} วัน ราคา ${baht(d.price_per_day*days)}?`)) return;
         const body = {title:document.getElementById('adTitle').value.trim(), text:document.getElementById('adText').value.trim(), link:document.getElementById('adLink').value.trim(), days};
-        if(await api('/ads', {json:body})){ toast('ลงโฆษณาแล้ว'); fetchWallet().then(updateWalletChips); this.render(el); }
+        const r = await api('/ads', {json:body});
+        if(r){ toastSubmitted(r, 'ลงโฆษณาแล้ว'); fetchWallet().then(updateWalletChips); this.render(el); }
       }
       if(e.target.dataset.adToggle && await api(`/ads/${e.target.dataset.adToggle}/toggle`, {method:'POST'})) this.render(el);
     };

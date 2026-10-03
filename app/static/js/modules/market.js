@@ -24,7 +24,7 @@ registerModule('rental', {
     else if(l.is_mine && l.status==='rented' && l.open_deal_id) btn = `<button class="btn-primary m-sm" data-return="${l.open_deal_id}">ได้ของคืนแล้ว</button>`;
     else if(!l.is_mine && l.status==='active') btn = `<button class="btn-primary m-sm" data-deal="${l.id}" data-kind="${l.kind}" data-price="${l.price}">${l.kind==='rent'?'เช่า':'ซื้อ'}</button>`;
     return `<div class="m-card m-product"><div class="m-row"><span class="badge ${l.kind==='rent'?'st-pending':'st-approved'}">${l.kind==='rent'?'ให้เช่า':'ขาย'}</span>
-      <small class="m-muted">${esc(l.status_label)}</small></div><b>${esc(l.title)}</b><p class="m-muted">${esc(l.description)}</p>
+      <small class="m-muted">${esc(l.status_label)}</small></div>${modBadge(l.mod)}<b>${esc(l.title)}</b><p class="m-muted">${esc(l.description)}</p>
       <div class="m-row"><span class="m-price">${baht(l.price)}${unit}</span><small class="m-muted">${esc(l.seller)} · ${esc(l.date)}</small></div>${btn}</div>`;
   },
   async show(tab){
@@ -50,7 +50,8 @@ registerModule('rental', {
     const body = {kind:document.getElementById('mkKind').value, title:document.getElementById('mkTitle').value.trim(),
                   description:document.getElementById('mkDesc').value.trim(), price:+document.getElementById('mkPrice').value};
     if(body.title.length<2 || !(body.price>0)){ toast('กรุณาใส่ชื่อและราคา'); return; }
-    if(await api('/market/listings', {json:body})){ toast('ลงประกาศแล้ว'); document.querySelector('.m-tab[data-tab="mine"]').click(); }
+    const r = await api('/market/listings', {json:body});
+    if(r){ toast(r.mod ? 'ส่งแล้ว — จะแสดงเมื่อผู้ดูแลอนุมัติ' : 'ลงประกาศแล้ว'); document.querySelector('.m-tab[data-tab="mine"]').click(); }
   },
   async deal(id, kind, price){
     if(!State.me){ toast('กรุณาเข้าสู่ระบบก่อน'); return; }

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 db_file = tempfile.mktemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{db_file}"
 os.environ.setdefault("SECRET_KEY", "test")
+os.environ["MODERATION"] = "off"          # ทดสอบระบบซื้อขาย — การอนุมัติทดสอบใน smoke_moderation.py
 os.environ["OLLAMA_URL"] = "http://127.0.0.1:9"          # ไม่มี AI → ต้องได้คำแนะนำพื้นฐาน
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -54,13 +55,25 @@ check("ดึงเฉพาะข้อความใหม่ (after)", bob.g
 print("── คอร์สเรียน ──")
 cid = bob.post("/course", json={"title": "Python พื้นฐาน", "price": 200}).json()["id"]
 bob.post(f"/course/{cid}/lessons", json={"title": "บทที่ 1", "content": "print('hi')"})
+bob.post(f"/course/{cid}/lessons", json={"title": "บทที่ 2 แบบทดสอบ", "content": "Python ใช้ฟังก์ชันอะไรพิมพ์ข้อความ", "questions": [
+    {"kind": "choice", "prompt": "ฟังก์ชันพิมพ์ข้อความ?", "choices": ["echo", "print", "say"], "answer": "1", "explanation": "ใช้ print()"},
+    {"kind": "text", "prompt": "พิมพ์ชื่อภาษาที่เรียน", "answer": "python|ไพธอน"}]})
+check("ปรนัยต้องมีตัวเลือก ≥2", bob.post(f"/course/{cid}/lessons", json={"title": "x", "questions": [{"kind": "choice", "prompt": "?", "choices": ["a"], "answer": "0"}]}).status_code == 400)
 check("ยังไม่ลงทะเบียน = ไม่เห็นเนื้อหา", "content" not in alice.get(f"/course/{cid}").json()["lessons"][0])
 alice.post(f"/course/{cid}/enroll")
 check("ลงทะเบียน: alice -200, bob +200", bal(alice) == 800 and bal(bob) == 1200)
 c = alice.get(f"/course/{cid}").json()
 check("ลงทะเบียนแล้วเห็นเนื้อหา", c["lessons"][0]["content"] == "print('hi')")
+check("ผู้เรียนไม่เห็นเฉลย", "answer" not in c["lessons"][1]["questions"][0])
+check("ผู้สอนเห็นเฉลย", bob.get(f"/course/{cid}").json()["lessons"][1]["questions"][0]["answer"] == "1")
 alice.post(f"/course/{cid}/lessons/{c['lessons'][0]['id']}/done")
-check("ความคืบหน้า 1/1", alice.get(f"/course/{cid}").json()["progress"] == "1/1")
+l2, q1, q2 = c["lessons"][1]["id"], c["lessons"][1]["questions"][0]["id"], c["lessons"][1]["questions"][1]["id"]
+check("บทมีคำถาม กดจบเองไม่ได้", alice.post(f"/course/{cid}/lessons/{l2}/done").status_code == 400)
+ans = lambda q, a: alice.post(f"/course/{cid}/lessons/{l2}/questions/{q}/answer", json={"answer": a}).json()
+check("ปรนัยตอบผิด", ans(q1, "0")["correct"] is False)
+r = ans(q1, "1"); check("ปรนัยตอบถูก + คำอธิบาย", r["correct"] and r["explanation"] == "ใช้ print()" and not r["lesson_done"])
+check("อัตนัย: ไม่สนตัวพิมพ์/ช่องว่าง", ans(q2, "  PYTHON ")["lesson_done"] is True)
+check("ความคืบหน้า 2/2", alice.get(f"/course/{cid}").json()["progress"] == "2/2")
 check("ลงซ้ำไม่ได้", alice.post(f"/course/{cid}/enroll").status_code == 400)
 
 print("── ตลาดงาน (พักเงิน) ──")
@@ -142,10 +155,12 @@ check("อุปกรณ์รับคำสั่ง (ครั้งเด�
 
 print("── สุขภาพ ──")
 t0 = tok(bob)
-bob.post("/health", json={"activity": "วิ่ง", "minutes": 45})
-bob.post("/health", json={"activity": "เดิน", "minutes": 20, "steps": 3000})
+pic = lambda: {"file": ("run.jpg", io.BytesIO(b"\xff\xd8\xff jpg"), "image/jpeg")}
+check("ไม่แนบรูป → ไม่รับ", bob.post("/health", data={"activity": "วิ่ง", "minutes": "45"}).status_code in (400, 422))
+bob.post("/health", data={"activity": "วิ่ง", "minutes": "45"}, files=pic())
+bob.post("/health", data={"activity": "เดิน", "minutes": "20", "steps": "3000"}, files=pic())
 check("65 นาที = 2 โทเคน", tok(bob) - t0 == 2)
-bob.post("/health", json={"activity": "ปั่นจักรยาน", "minutes": 600})
+bob.post("/health", data={"activity": "ปั่นจักรยาน", "minutes": "600"}, files=pic())
 check("วันละไม่เกิน 5 โทเคน", tok(bob) - t0 == 5)
 check("สรุป 7 วัน", bob.get("/health").json()["total_minutes"] == 665)
 check("AI ไม่พร้อม → คำแนะนำพื้นฐาน", "150" in bob.get("/health/tip").json()["tip"])

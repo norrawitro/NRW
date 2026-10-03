@@ -29,12 +29,13 @@ registerModule('creator', {
     }
     if(t.id==='cpPost'){
       const body = {title:document.getElementById('cpTitle').value.trim(), body:document.getElementById('cpBody').value, vip_only:document.getElementById('cpVip').checked};
-      if(body.title && await api('/creator/me/posts', {json:body})){ toast('โพสต์แล้ว'); this.render(this.el); }
+      const r = body.title && await api('/creator/me/posts', {json:body});
+      if(r){ toastSubmitted(r, 'โพสต์แล้ว'); this.render(this.el); }
     }
   },
   async posts(id){
     const d = await api(`/creator/${id}/posts`); if(!d) return;
-    document.getElementById('crPosts').innerHTML = `<div class="m-card"><h3>📰 โพสต์</h3>${d.posts.map(p=>`<div class="m-row" style="display:block"><b>${p.vip_only?'💎 ':''}${esc(p.title)}</b> <small class="m-muted">${esc(p.date)}</small>
+    document.getElementById('crPosts').innerHTML = `<div class="m-card"><h3>📰 โพสต์</h3>${d.posts.map(p=>`<div class="m-row" style="display:block"><b>${p.vip_only?'💎 ':''}${esc(p.title)}</b> <small class="m-muted">${esc(p.date)}</small> ${modBadge(p.mod)}
       <div class="m-pre">${p.body!==null?esc(p.body):'🔒 สมัคร VIP เพื่ออ่านโพสต์นี้'}</div></div>`).join('') || '<p class="m-muted">ยังไม่มีโพสต์</p>'}</div>`;
   },
 });

@@ -12,6 +12,7 @@ from app.deps import current_user, optional_user
 from app.models.community import CreatorPage, CreatorPost, Subscription
 from app.services.helpers import now, aware, fmt, names, get_or_404
 from app.services.wallet_ops import move_money, to_money
+from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 
 router = APIRouter()
 DAYS = 30
@@ -79,8 +80,11 @@ def posts(page_id: int, request: Request, db: Session = Depends(get_db)):
     me = optional_user(request, db)
     p = get_or_404(db, CreatorPage, page_id, "ไม่พบครีเอเตอร์")
     can_see = bool(me and (me.id == p.user_id or _active_sub(db, p.id, me.id)))
-    rows = db.query(CreatorPost).filter(CreatorPost.creator_id == p.id).order_by(CreatorPost.id.desc()).limit(50).all()
+    is_owner = bool(me and me.id == p.user_id)
+    hidden = set() if is_owner else hidden_ids(db, "creator_post")
+    rows = [x for x in db.query(CreatorPost).filter(CreatorPost.creator_id == p.id).order_by(CreatorPost.id.desc()).limit(50).all() if x.id not in hidden]
     return {"can_see_vip": can_see, "posts": [{"id": x.id, "title": x.title, "vip_only": x.vip_only, "date": fmt(x.created_at),
+             "mod": badge(db, "creator_post", x.id) if is_owner else None,
              "body": x.body if (can_see or not x.vip_only) else None} for x in rows]}
 
 
@@ -96,6 +100,9 @@ def add_post(body: PostIn, request: Request, db: Session = Depends(get_db)):
     p = db.query(CreatorPage).filter(CreatorPage.user_id == me.id).first()
     if not p:
         raise HTTPException(status_code=400, detail="เปิดหน้าครีเอเตอร์ก่อน")
-    db.add(CreatorPost(creator_id=p.id, title=body.title.strip(), body=body.body, vip_only=body.vip_only))
+    post = CreatorPost(creator_id=p.id, title=body.title.strip(), body=body.body, vip_only=body.vip_only)
+    db.add(post)
+    db.flush()
+    status = submit(db, "creator_post", post.id, me)
     db.commit()
-    return {"ok": True}
+    return {"ok": True, "mod_status": status}

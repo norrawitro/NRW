@@ -105,3 +105,10 @@ class HealthLog(Base):
     steps      = Column(Integer, nullable=False, default=0)
     tokens     = Column(Integer, nullable=False, default=0)       # โทเคนที่ได้จากรายการนี้
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class HealthEvidence(Base):
+    """รูปหลักฐานการออกกำลังกาย (1 รูปต่อ 1 รายการ) — ไฟล์อยู่ uploads/health/"""
+    __tablename__ = "health_evidence"
+    log_id = Column(Integer, ForeignKey("health_logs.id"), primary_key=True)
+    path   = Column(String(300), nullable=False)

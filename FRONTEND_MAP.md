@@ -38,13 +38,13 @@
 |------|------|----------------|
 | `info.js` | หน้าเกี่ยวกับ/คู่มือ/นโยบาย/เงื่อนไข/ติดต่อ (ลิงก์ท้ายเว็บ) | — |
 | `search.js` | ช่องค้นหาด้านบน | `/shop/products` |
-| `shop.js` | 🛒 ขายออนไลน์ (ตะกร้า, สั่งซื้อ) | `app/routers/shop.py` |
+| `shop.js` | 🛒 ขายออนไลน์: สินค้าทั้งหมด / ร้านของฉัน / ➕ ลงสินค้า (สมาชิกทุกคนขายได้) | `app/routers/shop.py` |
 | `logistics.js` | 🚚 คลังสินค้า/ขนส่ง (ติดตามพัสดุ, คิวจัดส่ง, สต็อก) | `app/routers/logistics.py` |
 | `market.js` | ♻️ มือสอง/เช่า | `app/routers/market.py` |
 | `token.js` | 🪙 โทเคน (โอน, แลกเป็นเงิน) | `app/routers/token.py` |
 | `analytics.js` | 📊 แดชบอร์ดวิเคราะห์ (+ ฟังก์ชันกราฟ `bars()` / `stat()` ที่ระบบอื่นใช้ด้วย) | `app/routers/analytics.py` |
 | `chat.js` | 💬 แชทเรียลไทม์ (ห้องรวม + DM, ดึงข้อความทุก 3 วิ) | `app/routers/chat.py` |
-| `course.js` | 🎓 คอร์สเรียนออนไลน์ | `app/routers/course.py` |
+| `course.js` | 🎓 คอร์สเรียนแบบอินเตอร์แอกทีฟ (ซื้อคอร์ส, เนื้อหา + คำถามปรนัย/อัตนัย, ตัวสร้างคำถาม) | `app/routers/course.py` |
 | `jobs.js` | 💼 ตลาดงาน/ฟรีแลนซ์ (พักเงิน) | `app/routers/jobs.py` |
 | `workspace.js` | 🧩 พื้นที่ทำงานร่วมกัน (บอร์ดงาน + โน้ต) | `app/routers/workspace.py` |
 | `ads.js` | 📢 โฆษณา (+ `loadHomeAd()` โฆษณาบนหน้าแรก) | `app/routers/ads.py` |
@@ -53,7 +53,7 @@
 | `events.js` | 🎫 กิจกรรม/ตั๋ว/เช็คอิน | `app/routers/events.py` |
 | `creator.js` | ⭐ ครีเอเตอร์/สมาชิก VIP | `app/routers/creator.py` |
 | `iot.js` | 📡 อุปกรณ์ IoT ของสมาชิก | `app/routers/iot_devices.py` |
-| `health.js` | 🏃 สุขภาพ/ออกกำลังกาย + โค้ช AI | `app/routers/health.py` |
+| `health.js` | 🏃 สุขภาพ: บันทึก + รูปหลักฐาน (รออนุมัติ) + โค้ช AI | `app/routers/health.py` |
 
 **เปิดระบบใหม่:** สร้าง `js/modules/<id>.js` → เรียก `registerModule('<id>', {sub:'...', render(el){...}})`
 → ใส่ `<script>` ใน `nora-web.html` (ก่อน `main.js`) — ระบบจะปลดล็อกในเมนูเองอัตโนมัติ (`id` ต้องตรงกับใน `MODULES`)
@@ -61,7 +61,7 @@
 ## หน้าอื่น
 | ไฟล์ | หน้า |
 |------|------|
-| `app/templates/manage.html` + `app/static/js/manage.js` | `/manage` แผงผู้ดูแล: อนุมัติคำขอเงิน, สมาชิก, สินค้า |
+| `app/templates/manage.html` + `app/static/js/manage.js` + `manage_content.js` | `/manage` แผงผู้ดูแล: 🛡️ อนุมัติเนื้อหา, คำขอเงิน, สมาชิก, สินค้า |
 | `app/templates/members/profile.html` + `app/static/js/profile.js` | `/members/profile` โปรไฟล์: แก้ข้อมูล, เปลี่ยนรหัส, สถิติ, โพสต์ของฉัน |
 
 ## API ฝั่ง server — `app/routers/`
@@ -72,9 +72,14 @@
 
 ตัวช่วยฝั่ง server: `app/deps.py` (ผู้ใช้ที่ login / admin) · `app/services/wallet_ops.py` (เพิ่ม/หักเงินและโทเคน — **ทุกระบบที่มีการจ่ายเงินต้องใช้ตัวนี้**)
 
+## ระบบอนุมัติเนื้อหา
+เนื้อหาที่สมาชิกลง (โพสต์, สินค้า, ประกาศมือสอง, คอร์ส, งาน, โฆษณา, วิดีโอ, กิจกรรม, โพสต์ครีเอเตอร์, หลักฐานออกกำลังกาย)
+ซ่อนจนผู้ดูแลอนุมัติที่ `/manage` → แท็บ 🛡️ — โค้ดกลางอยู่ที่ `app/services/moderation.py` (`submit`, `hidden_ids`, `badge`, `ensure_visible`)
+หน้าเว็บแสดงป้ายให้เจ้าของด้วย `modBadge()` ใน `core.js` · ปิดทั้งระบบได้ด้วย `MODERATION=off` ใน `.env`
+
 ## กฎสำคัญ
 - เงิน/โทเคน: ใช้ `move_money()` / `move_tokens()` เท่านั้น (ล็อกแถว + กันยอดติดลบ + บันทึกประวัติ) แล้ว `db.commit()` ครั้งเดียวตอนจบ
-- ทดสอบหลังแก้: `python tests/smoke_phase2.py` และ `python tests/smoke_phase34.py` (ใช้ฐานข้อมูลชั่วคราว ไม่แตะข้อมูลจริง) และ `bash verify.sh all`
+- ทดสอบหลังแก้: `python tests/smoke_phase2.py`, `smoke_phase34.py`, `smoke_seller.py`, `smoke_moderation.py` (ใช้ฐานข้อมูลชั่วคราว ไม่แตะข้อมูลจริง) และ `bash verify.sh all`
 - รีสตาร์ทหลังแก้ไฟล์ `.py`: `bash restart.sh` (ไฟล์ HTML/CSS/JS แค่ refresh หน้าเว็บ)
 - ลิงก์ที่ผู้ใช้ใส่ (เช่นโฆษณา) ต้องผ่าน `safe_link()` ใน `app/services/helpers.py` — กัน `javascript:`
 - ข้อความที่ผู้ใช้พิมพ์ (โพสต์, ชื่อไฟล์, ข้อความ AI) ต้องผ่าน `esc()` ก่อนใส่ใน `innerHTML` เสมอ — กันโดนแฮ็ก (XSS)

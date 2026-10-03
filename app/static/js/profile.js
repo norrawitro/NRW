@@ -54,8 +54,7 @@
     } finally{ $('modalSave').disabled = false; }
   };
 
-  // สถิติ + โพสต์ของฉัน
-  const CAT = {announce:'ประกาศ', update:'อัปเดตระบบ', event:'กิจกรรม'};
+  // สถิติ
   (async ()=>{
     try{
       const a = await (await fetch('/analytics/me', {credentials:'same-origin'})).json();
@@ -63,12 +62,58 @@
       $('st-balance').textContent = '฿' + Number(a.balance).toLocaleString('th-TH', {maximumFractionDigits:0});
       $('st-token').textContent = Number(a.token).toLocaleString();
     }catch(e){}
-    try{
-      const d = await (await fetch('/members/me/posts', {credentials:'same-origin'})).json();
-      $('myPosts').innerHTML = d.posts.length ? d.posts.map(p=>`<div class="post-card">
-        <div class="post-header"><span class="post-cat">${esc(CAT[p.cat]||p.cat)}</span><span class="post-date">${esc(p.when)}</span></div>
-        <div class="post-text">${esc(p.text)}</div><div class="post-footer"><span class="post-stat">👍 ${p.likes}</span><span class="post-stat">💬 ${p.comments}</span></div></div>`).join('')
-        : `<div class="empty-state"><div class="empty-ico">📭</div><p>ยังไม่มีโพสต์</p><p style="font-size:.8rem;margin-top:6px">ไปที่หน้า <a href="/#news" style="color:var(--primary);font-weight:600">ข่าวสาร</a> เพื่อเขียนโพสต์แรก</p></div>`;
-    }catch(e){}
   })();
+
+  // โพสต์ของฉัน — โครงเดียวกับ "ประกาศจากระบบ": กดถูกใจ, ดู/เขียนความเห็น, ลบ
+  const CAT = {announce:['ประกาศ','#4F46E5'], update:['อัปเดตระบบ','#06B6D4'], event:['กิจกรรม','#F59E0B']};
+  const call = async (url, opts={}) => {
+    if(opts.json !== undefined){ opts.method = opts.method||'POST'; opts.headers = {'Content-Type':'application/json'}; opts.body = JSON.stringify(opts.json); delete opts.json; }
+    const r = await fetch(url, {credentials:'same-origin', ...opts});
+    const d = await r.json().catch(()=>null);
+    if(!r.ok){ toast((d && typeof d.detail==='string') ? d.detail : 'เกิดข้อผิดพลาด'); return null; }
+    return d;
+  };
+  function postCard(p){
+    const [label, color] = CAT[p.cat] || [p.cat, '#5B5F76'];
+    const mod = p.mod ? `<span class="pp-badge ${p.mod.status==='rejected'?'no':''}">${p.mod.status==='pending'?'⏳ รอผู้ดูแลอนุมัติ':'❌ ไม่อนุมัติ'+(p.mod.reason?': '+esc(p.mod.reason):'')}</span>` : '';
+    return `<div class="pp-post" id="pp-${p.id}"><div class="pp-head"><div class="pp-av" style="background:${color}">${esc((p.author||'?')[0])}</div>
+        <div><b style="font-size:.88rem">${esc(p.author)}</b><div style="font-size:.75rem;color:var(--ink-soft)">${esc(p.when)}</div></div>
+        <span class="pp-tag" style="background:${color}1a;color:${color}">${esc(label)}</span>
+        <button data-pdel="${p.id}" title="ลบโพสต์" style="background:none;border:none;cursor:pointer;color:var(--danger)">🗑️</button></div>
+      ${mod ? `<div style="margin-bottom:6px">${mod}</div>` : ''}<div class="pp-body">${esc(p.text)}</div>
+      <div class="pp-acts"><button class="${p.liked?'liked':''}" data-plike="${p.id}">👍 ${p.liked?'ถูกใจแล้ว':'ถูกใจ'} ${p.likes?'('+p.likes+')':''}</button>
+        <button data-ptoggle="${p.id}">💬 ความเห็น ${p.comments?'('+p.comments+')':''}</button></div>
+      <div class="pp-comments" id="ppc-${p.id}"><div id="ppcl-${p.id}"></div>
+        <div class="pp-cin"><input id="ppci-${p.id}" maxlength="1000" placeholder="เขียนความเห็น…"><button data-psend="${p.id}">ส่ง</button></div></div></div>`;
+  }
+  async function loadPosts(){
+    const d = await call('/news/posts?mine=true&limit=50');
+    const posts = d ? d.posts : [];
+    $('myPosts').innerHTML = `<div class="pp-compose"><textarea id="ppNew" rows="2" maxlength="5000" placeholder="เขียนโพสต์ใหม่…"></textarea>
+        <select id="ppCat" style="border-radius:10px;border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink)"><option value="announce">ประกาศ</option><option value="update">อัปเดตระบบ</option><option value="event">กิจกรรม</option></select>
+        <button class="btn-p" id="ppPost">โพสต์</button></div>` +
+      (posts.length ? posts.map(postCard).join('') : `<div class="empty-state"><div class="empty-ico">📭</div><p>ยังไม่มีโพสต์ — เขียนโพสต์แรกด้านบนได้เลย</p></div>`);
+  }
+  async function loadComments(id){
+    const d = await call(`/news/posts/${id}/comments`); if(!d) return;
+    $('ppcl-'+id).innerHTML = d.comments.length ? d.comments.map(c=>`<div class="pp-c"><div class="pp-cav">${esc((c.author||'?')[0])}</div>
+      <div class="pp-cbody"><div style="font-size:.7rem;color:var(--ink-soft);font-weight:600">${esc(c.author)} · ${esc(c.when)}</div>${esc(c.text)}</div></div>`).join('')
+      : '<p style="font-size:.75rem;color:var(--ink-soft)">ยังไม่มีความเห็น</p>';
+  }
+  $('myPosts').addEventListener('click', async e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    const d = b.dataset;
+    if(b.id==='ppPost'){
+      const text = $('ppNew').value.trim(); if(!text) return;
+      if(await call('/news/posts', {json:{text, cat:$('ppCat').value}})){ toast('โพสต์แล้ว'); loadPosts(); }
+    }
+    if(d.plike){ const r = await call(`/news/posts/${d.plike}/like`, {method:'POST'});
+      if(r){ b.classList.toggle('liked', r.liked); b.textContent = `👍 ${r.liked?'ถูกใจแล้ว':'ถูกใจ'} ${r.likes?'('+r.likes+')':''}`; } }
+    if(d.ptoggle){ const sec = $('ppc-'+d.ptoggle); if(sec.classList.toggle('open')) loadComments(d.ptoggle); }
+    if(d.psend){ const inp = $('ppci-'+d.psend), text = inp.value.trim(); if(!text) return;
+      if(await call(`/news/posts/${d.psend}/comments`, {json:{text}})){ inp.value = ''; loadComments(d.psend); } }
+    if(d.pdel && confirm('ลบโพสต์นี้?') && await call(`/news/posts/${d.pdel}`, {method:'DELETE'})){ toast('ลบแล้ว'); loadPosts(); }
+  });
+  $('myPosts').addEventListener('keydown', e=>{ if(e.key==='Enter' && e.target.id && e.target.id.startsWith('ppci-')) e.target.nextElementSibling.click(); });
+  loadPosts();
 })();

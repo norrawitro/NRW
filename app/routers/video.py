@@ -12,23 +12,25 @@ from app.deps import current_user, optional_user
 from app.models.community import Video
 from app.routers.cloud import UPLOAD_ROOT
 from app.services.helpers import fmt, names, get_or_404
+from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 
 router = APIRouter()
 MAX_BYTES = int(float(os.getenv("VIDEO_MAX_MB", "300")) * 1024 * 1024)
 TYPES = {".mp4": "video/mp4", ".webm": "video/webm", ".ogg": "video/ogg", ".mov": "video/quicktime"}
 
 
-def video_dict(v, who, me):
-    return {"id": v.id, "title": v.title, "description": v.description, "owner": who.get(v.owner_id, "—"),
+def video_dict(v, who, me, db=None):
+    return {"mod": badge(db, "video", v.id) if (db and me and me.id == v.owner_id) else None, "id": v.id, "title": v.title, "description": v.description, "owner": who.get(v.owner_id, "—"),
             "views": v.views, "size": v.size, "date": fmt(v.created_at, False), "is_mine": bool(me and me.id == v.owner_id)}
 
 
 @router.get("")
 def list_videos(request: Request, db: Session = Depends(get_db)):
     me = optional_user(request, db)
-    vids = db.query(Video).order_by(Video.id.desc()).limit(100).all()
+    hidden = hidden_ids(db, "video")
+    vids = [v for v in db.query(Video).order_by(Video.id.desc()).limit(100).all() if v.id not in hidden or (me and me.id == v.owner_id)]
     who = names(db, [v.owner_id for v in vids])
-    return {"videos": [video_dict(v, who, me) for v in vids], "max_mb": MAX_BYTES // (1024 * 1024)}
+    return {"videos": [video_dict(v, who, me, db) for v in vids], "max_mb": MAX_BYTES // (1024 * 1024)}
 
 
 @router.post("")
@@ -57,13 +59,16 @@ async def upload(request: Request, file: UploadFile = File(...), title: str = Fo
         raise
     v = Video(owner_id=me.id, title=title.strip()[:200], description=description.strip()[:5000], path=rel, size=size)
     db.add(v)
+    db.flush()
+    status = submit(db, "video", v.id, me)
     db.commit()
-    return {"id": v.id}
+    return {"id": v.id, "mod_status": status}
 
 
 @router.get("/{video_id}/file")
-def stream(video_id: int, db: Session = Depends(get_db)):
+def stream(video_id: int, request: Request, db: Session = Depends(get_db)):
     v = get_or_404(db, Video, video_id, "ไม่พบวิดีโอ")
+    ensure_visible(db, "video", v.id, v.owner_id, optional_user(request, db), "ไม่พบวิดีโอ")
     full = os.path.join(UPLOAD_ROOT, v.path)
     if not os.path.isfile(full):
         raise HTTPException(status_code=410, detail="ไฟล์วิดีโอหายไป")

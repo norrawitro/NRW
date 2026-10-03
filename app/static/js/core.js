@@ -69,3 +69,12 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme', State.dark?'dark':'');
   const b = document.getElementById('themeBtn'); if(b) b.textContent = State.dark?'☀️':'🌙';
 }
+
+/* ── ระบบอนุมัติเนื้อหา: ป้ายบอกเจ้าของว่าเนื้อหายังไม่แสดงต่อสาธารณะ ── */
+function modBadge(m){
+  if(!m) return '';
+  return m.status==='pending' ? '<span class="badge st-pending">⏳ รอผู้ดูแลอนุมัติ</span>'
+    : `<span class="badge st-rejected" title="${esc(m.reason)}">❌ ไม่อนุมัติ${m.reason?': '+esc(m.reason):''}</span>`;
+}
+/** แจ้งหลังส่งเนื้อหา — ถ้ารออนุมัติให้บอกผู้ใช้ */
+function toastSubmitted(r, done){ toast(r && r.mod_status==='pending' ? 'ส่งแล้ว — จะแสดงเมื่อผู้ดูแลอนุมัติ' : done); }

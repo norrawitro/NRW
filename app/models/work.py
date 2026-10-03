@@ -110,3 +110,27 @@ class Ad(Base):
     views      = Column(Integer, nullable=False, default=0)
     clicks     = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class LessonQuestion(Base):
+    """คำถามท้ายบทเรียน — choice = ปรนัย (answer = ลำดับตัวเลือกที่ถูก เริ่ม 0), text = อัตนัย (answer = คำตอบที่ยอมรับ คั่นด้วย |)"""
+    __tablename__ = "lesson_questions"
+    id          = Column(Integer, primary_key=True)
+    lesson_id   = Column(Integer, ForeignKey("course_lessons.id"), nullable=False, index=True)
+    position    = Column(Integer, nullable=False, default=1)
+    kind        = Column(String(10), nullable=False)            # choice / text
+    prompt      = Column(Text, nullable=False)
+    choices     = Column(Text, nullable=False, default="[]")    # JSON list (เฉพาะ choice)
+    answer      = Column(Text, nullable=False)
+    explanation = Column(Text, nullable=False, default="")
+
+
+class LessonAnswer(Base):
+    """คำตอบล่าสุดของผู้เรียนต่อคำถาม"""
+    __tablename__ = "lesson_answers"
+    id          = Column(Integer, primary_key=True)
+    question_id = Column(Integer, ForeignKey("lesson_questions.id"), nullable=False, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    answer      = Column(Text, nullable=False, default="")
+    correct     = Column(Boolean, nullable=False, default=False)
+    tries       = Column(Integer, nullable=False, default=0)

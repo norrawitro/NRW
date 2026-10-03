@@ -12,6 +12,7 @@ function postCard(p){
       <span class="post-tag" style="background:${cat.color}1a;color:${cat.color}">${cat.label}</span>
       ${p.is_mine ? `<button class="post-del-btn" data-del-post="${p.id}" title="ลบโพสต์ของฉัน" style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--danger)">🗑️</button>` : ''}
     </div>
+    ${p.mod ? `<div style="margin-bottom:6px">${modBadge(p.mod)}</div>` : ''}
     <div class="post-body">${esc(p.text)}</div>
     <div class="post-actions">
       <button class="like-btn ${p.liked?'liked':''}" data-like="${p.id}" title="กดถูกใจ">
@@ -114,6 +115,7 @@ async function submitPostFn(){
     if(r.status===401){ alert('กรุณาเข้าสู่ระบบก่อนโพสต์'); window.location='/members/login'; return; }
     if(!r.ok){ const er=await r.json(); alert(er.detail||'เกิดข้อผิดพลาด'); return; }
     document.getElementById('newPostText').value = '';
+    if(typeof toast==='function') toast('โพสต์แล้ว — ถ้าเป็นสมาชิกทั่วไป จะแสดงต่อทุกคนเมื่อผู้ดูแลอนุมัติ');
     await renderNewsFeed();
   } finally{ btn.disabled=false; btn.textContent='โพสต์'; }
 }

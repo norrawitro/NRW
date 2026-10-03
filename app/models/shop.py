@@ -41,3 +41,20 @@ class ShipmentEvent(Base):
     status     = Column(String(20), nullable=False)
     note       = Column(String(200), nullable=False, default="")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProductSeller(Base):
+    """สินค้าที่สมาชิกลงขายเอง (สินค้าที่ไม่มีแถวนี้ = สินค้าของแพลตฟอร์ม ลงโดยผู้ดูแล)"""
+    __tablename__ = "product_sellers"
+
+    product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
+    seller_id  = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+
+class OrderSeller(Base):
+    """ผู้ขายของออเดอร์ — เงินพักไว้กับระบบจนผู้ซื้อได้รับสินค้า แล้วจึงโอนให้ผู้ขาย (paid_out)"""
+    __tablename__ = "order_sellers"
+
+    order_id  = Column(Integer, ForeignKey("orders.id"), primary_key=True)
+    seller_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    paid_out  = Column(Integer, nullable=False, default=0)    # 0/1

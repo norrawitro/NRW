@@ -6,7 +6,7 @@ registerModule('video', {
     const d = await api('/video'); if(!d) return;
     el.innerHTML = `<div class="m-split"><div class="m-grid m-grid-wide">${d.videos.map(v=>`<div class="m-card m-product">
         <video controls preload="metadata" src="/video/${v.id}/file" data-vid="${v.id}"></video>
-        <b>${esc(v.title)}</b><p class="m-muted">${esc(v.description)}</p>
+        ${modBadge(v.mod)}<b>${esc(v.title)}</b><p class="m-muted">${esc(v.description)}</p>
         <small class="m-muted">รหัส #${v.id} · ${esc(v.owner)} · 👁 ${v.views} · ${esc(v.date)}</small>
         ${v.is_mine?`<button class="btn-ghost m-sm" data-vdel="${v.id}">ลบ</button>`:''}</div>`).join('') || '<p class="m-muted">ยังไม่มีวิดีโอ</p>'}</div>
       <div class="m-card m-form"><h3>⬆️ อัปโหลดวิดีโอ</h3><input id="vdTitle" class="m-input" placeholder="ชื่อวิดีโอ"><textarea id="vdDesc" class="m-input" rows="2" placeholder="รายละเอียด"></textarea>
@@ -23,7 +23,7 @@ registerModule('video', {
         e.target.disabled = true; e.target.textContent = 'กำลังอัปโหลด…';
         const r = await api('/video', {method:'POST', body:fd});
         e.target.disabled = false; e.target.textContent = 'อัปโหลด';
-        if(r){ toast(`อัปโหลดแล้ว (รหัส #${r.id})`); this.render(el); }
+        if(r){ toastSubmitted(r, `อัปโหลดแล้ว (รหัส #${r.id})`); this.render(el); }
       }
     };
   },

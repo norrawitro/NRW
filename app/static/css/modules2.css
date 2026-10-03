@@ -25,3 +25,19 @@
 .m-ai{background:var(--primary-soft);border:none;margin-top:12px}
 .m-warn-box{background:rgba(245,158,11,.12);border-radius:10px;padding:10px;margin-top:10px;font-size:13px;word-break:break-all}
 @media (max-width:700px){.m-kanban{grid-template-columns:1fr}}
+/* คอร์สเรียนแบบอินเตอร์แอกทีฟ */
+.m-course{display:grid;grid-template-columns:220px 1fr;gap:14px;margin-top:10px}
+.m-lessons{display:flex;flex-direction:column;gap:6px}
+.m-lesson-btn{text-align:left;padding:9px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);font-size:13.5px}
+.m-lesson-btn.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:600}
+.m-room{min-height:200px}
+.m-teach{font-size:15px;line-height:1.7;background:var(--surface-2);padding:16px}
+.m-quizq{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0;transition:border-color .2s}
+.m-quizq.ok{border-color:var(--emerald);background:rgba(16,185,129,.06)}
+.m-choice{display:block;padding:8px 10px;margin:6px 0;border-radius:10px;background:var(--surface-2);cursor:pointer;font-size:14px}
+.m-choice:hover{background:var(--primary-soft)}
+.m-builder{border-top:1px dashed var(--line);margin-top:16px;padding-top:12px}
+.m-qbuild{background:var(--surface-2);box-shadow:none}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (max-width:760px){.m-course{grid-template-columns:1fr}}

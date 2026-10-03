@@ -12,6 +12,7 @@ from app.deps import current_user, optional_user
 from app.models.community import Event, Ticket
 from app.services.helpers import now, aware, fmt, names, get_or_404
 from app.services.wallet_ops import move_money, to_money
+from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 
 router = APIRouter()
 
@@ -22,13 +23,15 @@ def event_dict(db, e, me, who):
     return {"id": e.id, "title": e.title, "description": e.description, "when": fmt(e.starts_at), "place": e.place,
             "price": float(e.price), "capacity": e.capacity, "sold": sold, "organizer": who.get(e.organizer_id, "—"),
             "is_mine": bool(me and me.id == e.organizer_id), "past": aware(e.starts_at) < now(),
-            "my_ticket": mine.code if mine else None}
+            "my_ticket": mine.code if mine else None,
+            "mod": badge(db, "event", e.id) if (me and me.id == e.organizer_id) else None}
 
 
 @router.get("")
 def list_events(request: Request, db: Session = Depends(get_db)):
     me = optional_user(request, db)
-    evs = db.query(Event).order_by(Event.starts_at.desc()).limit(100).all()
+    hidden = hidden_ids(db, "event")
+    evs = [e for e in db.query(Event).order_by(Event.starts_at.desc()).limit(100).all() if e.id not in hidden or (me and me.id == e.organizer_id)]
     who = names(db, [e.organizer_id for e in evs])
     return {"events": [event_dict(db, e, me, who) for e in evs]}
 
@@ -48,14 +51,17 @@ def create_event(body: EventIn, request: Request, db: Session = Depends(get_db))
     e = Event(organizer_id=me.id, title=body.title.strip(), description=body.description.strip(),
               starts_at=body.starts_at, place=body.place.strip(), price=to_money(body.price), capacity=body.capacity)
     db.add(e)
+    db.flush()
+    status = submit(db, "event", e.id, me)
     db.commit()
-    return {"id": e.id}
+    return {"id": e.id, "mod_status": status}
 
 
 @router.post("/{event_id}/tickets")
 def buy_ticket(event_id: int, request: Request, db: Session = Depends(get_db)):
     me = current_user(request, db)
     e = get_or_404(db, Event, event_id, "ไม่พบกิจกรรม", lock=True)
+    ensure_visible(db, "event", e.id, e.organizer_id, None, "ไม่พบกิจกรรม")
     if aware(e.starts_at) < now():
         raise HTTPException(status_code=400, detail="กิจกรรมผ่านไปแล้ว")
     if db.query(Ticket).filter(Ticket.event_id == e.id, Ticket.user_id == me.id).first():

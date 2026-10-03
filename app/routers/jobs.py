@@ -13,6 +13,7 @@ from app.deps import current_user, optional_user
 from app.models.work import Job, JobProposal
 from app.services.helpers import names, get_or_404, fmt
 from app.services.wallet_ops import move_money, to_money
+from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 
 router = APIRouter()
 LABELS = {"open": "เปิดรับ", "hired": "กำลังทำ", "done": "เสร็จแล้ว", "cancelled": "ยกเลิก"}
@@ -23,7 +24,8 @@ def job_dict(db, j, me):
     d = {"id": j.id, "title": j.title, "description": j.description, "budget": float(j.budget),
          "status": j.status, "status_label": LABELS[j.status], "client": who.get(j.client_id, "—"),
          "freelancer": who.get(j.freelancer_id), "date": fmt(j.created_at, False),
-         "is_mine": bool(me and me.id == j.client_id), "is_hired_me": bool(me and me.id == j.freelancer_id)}
+         "is_mine": bool(me and me.id == j.client_id), "is_hired_me": bool(me and me.id == j.freelancer_id),
+         "mod": badge(db, "job", j.id) if (me and me.id == j.client_id) else None}
     if me and me.id == j.client_id:
         props = db.query(JobProposal).filter(JobProposal.job_id == j.id).all()
         pw = names(db, [p.freelancer_id for p in props])
@@ -41,7 +43,8 @@ def list_jobs(request: Request, scope: str = "open", db: Session = Depends(get_d
         q = q.filter((Job.client_id == me.id) | (Job.freelancer_id == me.id))
     else:
         q = q.filter(Job.status == "open")
-    return {"jobs": [job_dict(db, j, me) for j in q.order_by(Job.id.desc()).limit(100).all()]}
+    hidden = set() if scope == "mine" else hidden_ids(db, "job")
+    return {"jobs": [job_dict(db, j, me) for j in q.order_by(Job.id.desc()).limit(100).all() if j.id not in hidden]}
 
 
 class JobIn(BaseModel):
@@ -55,8 +58,10 @@ def post_job(body: JobIn, request: Request, db: Session = Depends(get_db)):
     me = current_user(request, db)
     j = Job(client_id=me.id, title=body.title.strip(), description=body.description.strip(), budget=to_money(body.budget))
     db.add(j)
+    db.flush()
+    status = submit(db, "job", j.id, me)
     db.commit()
-    return {"id": j.id}
+    return {"id": j.id, "mod_status": status}
 
 
 class ProposalIn(BaseModel):
@@ -69,6 +74,7 @@ def propose(job_id: int, body: ProposalIn, request: Request, db: Session = Depen
     j = get_or_404(db, Job, job_id, "ไม่พบงาน")
     if j.status != "open" or j.client_id == me.id:
         raise HTTPException(status_code=400, detail="ยื่นข้อเสนองานนี้ไม่ได้")
+    ensure_visible(db, "job", j.id, j.client_id, None, "ไม่พบงาน")
     if db.query(JobProposal).filter(JobProposal.job_id == j.id, JobProposal.freelancer_id == me.id).first():
         raise HTTPException(status_code=400, detail="ยื่นข้อเสนอไปแล้ว")
     db.add(JobProposal(job_id=j.id, freelancer_id=me.id, message=body.message.strip()))

@@ -18,7 +18,8 @@ registerModule('jobs', {
     if(t.dataset.act && confirm(t.dataset.act==='complete'?'ยืนยันงานเสร็จ? เงินจะโอนให้ฟรีแลนซ์':'ยกเลิกงาน? (ถ้าจ้างแล้วจะคืนเงินให้)') && await api(`/jobs/${t.dataset.job}/${t.dataset.act}`, {method:'POST'})){ toast('เรียบร้อย'); fetchWallet().then(updateWalletChips); this.show('mine'); }
     if(t.id==='jbPost'){
       const body = {title:document.getElementById('jbTitle').value.trim(), description:document.getElementById('jbDesc').value.trim(), budget:+document.getElementById('jbBudget').value};
-      if(await api('/jobs', {json:body})){ toast('ลงงานแล้ว'); el.querySelector('[data-tab=mine]').click(); }
+      const r = await api('/jobs', {json:body});
+      if(r){ toastSubmitted(r, 'ลงงานแล้ว'); el.querySelector('[data-tab=mine]').click(); }
     }
   },
   async show(tab){
@@ -28,7 +29,7 @@ registerModule('jobs', {
       <input id="jbBudget" class="m-input" type="number" min="1" placeholder="งบประมาณ (บาท)"><button class="btn-primary" id="jbPost">ลงงาน</button></div>`; return; }
     const d = await api('/jobs?scope='+tab); if(!d) return;
     box.innerHTML = d.jobs.length ? d.jobs.map(j=>`<div class="m-card"><div class="m-row"><b>${esc(j.title)}</b><span class="m-price">${baht(j.budget)}</span></div>
-      <p>${esc(j.description)}</p><small class="m-muted">ผู้จ้าง ${esc(j.client)} · ${esc(j.date)} · ${esc(j.status_label)}${j.freelancer?` · ฟรีแลนซ์ ${esc(j.freelancer)}`:''}</small>
+      ${modBadge(j.mod)}<p>${esc(j.description)}</p><small class="m-muted">ผู้จ้าง ${esc(j.client)} · ${esc(j.date)} · ${esc(j.status_label)}${j.freelancer?` · ฟรีแลนซ์ ${esc(j.freelancer)}`:''}</small>
       ${tab==='open' && !j.is_mine ? `<div><button class="btn-primary m-sm" data-propose="${j.id}">ยื่นข้อเสนอ</button></div>`:''}
       ${j.is_mine && j.status==='open' ? (j.proposals||[]).map(p=>`<div class="m-row"><span>🙋 ${esc(p.freelancer)}: ${esc(p.message)}</span><button class="btn-primary m-sm" data-job="${j.id}" data-hire="${p.id}">จ้าง</button></div>`).join('') || '<p class="m-muted">ยังไม่มีข้อเสนอ</p>' : ''}
       ${j.is_mine && j.status==='hired' ? `<div><button class="btn-primary m-sm" data-job="${j.id}" data-act="complete">✅ งานเสร็จ จ่ายเงิน</button></div>`:''}

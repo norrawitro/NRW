@@ -8,6 +8,7 @@ from app.database import get_db
 from app.auth import get_current_user_from_cookie
 from app.models.user import User
 from app.models.post import Post, PostLike, PostComment
+from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -47,6 +48,8 @@ def _post_dict(post: Post, db: Session, current_user_id: int | None = None):
         "cat":        post.cat,
         "author":     author.full_name if author else "ไม่ระบุ",
         "author_id":  post.author_id,
+        "is_mine":    current_user_id is not None and post.author_id == current_user_id,
+        "mod":        badge(db, "post", post.id) if post.author_id == current_user_id else None,
         "text":       post.text,
         "is_pinned":  post.is_pinned,
         "likes":      likes,
@@ -62,15 +65,23 @@ async def get_posts(
     request: Request,
     cat: str = "all",
     limit: int = 50,
+    mine: bool = False,
     db: Session = Depends(get_db)
 ):
+    """mine=true → เฉพาะโพสต์ของฉัน (รวมที่รออนุมัติ) — ใช้ในหน้าโปรไฟล์"""
     payload = get_current_user_from_cookie(request)
     uid = int(payload["sub"]) if payload else None
 
     q = db.query(Post).filter(Post.is_deleted == False)
+    if mine:
+        if not uid:
+            raise HTTPException(status_code=401, detail="กรุณา login ก่อน")
+        q = q.filter(Post.author_id == uid)
     if cat and cat != "all":
         q = q.filter(Post.cat == cat)
     posts = q.order_by(Post.is_pinned.desc(), Post.created_at.desc()).limit(limit).all()
+    hidden = hidden_ids(db, "post")      # รอผู้ดูแลอนุมัติ — เห็นเฉพาะเจ้าของ
+    posts = [p for p in posts if p.id not in hidden or p.author_id == uid]
     return {"posts": [_post_dict(p, db, uid) for p in posts]}
 
 # ─── POST /news/posts ────────────────────────────────────────
@@ -88,6 +99,8 @@ async def create_post(
 
     post = Post(author_id=user.id, cat=body.cat, text=body.text.strip())
     db.add(post)
+    db.flush()
+    submit(db, "post", post.id, user)
     db.commit()
     db.refresh(post)
     return _post_dict(post, db, user.id)
@@ -103,6 +116,7 @@ async def toggle_like(
     post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == False).first()
     if not post:
         raise HTTPException(status_code=404, detail="ไม่พบโพสต์")
+    ensure_visible(db, "post", post.id, post.author_id, user, "ไม่พบโพสต์")
 
     existing = db.query(PostLike).filter(
         PostLike.post_id == post_id, PostLike.user_id == user.id
@@ -155,6 +169,7 @@ async def add_comment(
     post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == False).first()
     if not post:
         raise HTTPException(status_code=404, detail="ไม่พบโพสต์")
+    ensure_visible(db, "post", post.id, post.author_id, user, "ไม่พบโพสต์")
     c = PostComment(post_id=post_id, author_id=user.id, text=body.text.strip())
     db.add(c)
     db.commit()

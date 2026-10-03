@@ -15,6 +15,7 @@ from app.deps import current_user, current_admin
 from app.models.work import Ad
 from app.services.helpers import now, aware, fmt, safe_link, get_or_404, names
 from app.services.wallet_ops import move_money
+from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 
 router = APIRouter()
 PRICE_PER_DAY = Decimal(os.getenv("AD_PRICE_PER_DAY", "20"))
@@ -32,7 +33,8 @@ def ad_dict(a, owner=None):
 @router.get("/serve")
 def serve(db: Session = Depends(get_db)):
     """สุ่ม 1 โฆษณาที่กำลังแสดงอยู่ (หน้าแรกเรียก)"""
-    live = [a for a in db.query(Ad).filter(Ad.is_active == True).all() if aware(a.ends_at) > now()]
+    hidden = hidden_ids(db, "ad")
+    live = [a for a in db.query(Ad).filter(Ad.is_active == True).all() if aware(a.ends_at) > now() and a.id not in hidden]
     if not live:
         return {"ad": None}
     a = random.choice(live)
@@ -55,7 +57,7 @@ def click(ad_id: int, db: Session = Depends(get_db)):
 def my_ads(request: Request, db: Session = Depends(get_db)):
     me = current_user(request, db)
     return {"price_per_day": float(PRICE_PER_DAY),
-            "ads": [ad_dict(a) for a in db.query(Ad).filter(Ad.owner_id == me.id).order_by(Ad.id.desc()).all()]}
+            "ads": [{**ad_dict(a), "mod": badge(db, "ad", a.id)} for a in db.query(Ad).filter(Ad.owner_id == me.id).order_by(Ad.id.desc()).all()]}
 
 
 class AdIn(BaseModel):
@@ -74,8 +76,10 @@ def buy_ad(body: AdIn, request: Request, db: Session = Depends(get_db)):
     a = Ad(owner_id=me.id, title=body.title.strip(), text=body.text.strip(), link=link, paid=cost,
            ends_at=now() + timedelta(days=body.days))
     db.add(a)
+    db.flush()
+    status = submit(db, "ad", a.id, me)        # ถูกปฏิเสธ = คืนเงิน (ดู manage.py)
     db.commit()
-    return ad_dict(a)
+    return {**ad_dict(a), "mod_status": status}
 
 
 @router.get("/admin/all")

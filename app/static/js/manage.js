@@ -86,4 +86,4 @@ document.addEventListener('click', async e=>{
   if(t.id==='pfSave') Tabs.saveProduct();
   if(t.id==='pfNew') Tabs.fillProduct(null);
 });
-Tabs.requests();
+// หน้าแรกของแผงผู้ดูแล = อนุมัติเนื้อหา (manage_content.js)

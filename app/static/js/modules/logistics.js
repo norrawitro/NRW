@@ -13,6 +13,8 @@ registerModule('logistics', {
       ${State.me.is_admin ? `<div class="m-card"><h3>🛠️ คิวจัดส่ง (ผู้ดูแล)</h3><div id="lgQueue"></div></div>
       <div class="m-card"><h3>🏬 สต็อกสินค้า (ผู้ดูแล)</h3><div id="lgStock"></div></div>` : ''}`;
     el.onclick = e=>{
+      const r = e.target.closest('[data-received]');
+      if(r && confirm('ได้รับสินค้าครบถ้วนแล้ว? ระบบจะโอนเงินให้ผู้ขาย')) api(`/logistics/orders/${r.dataset.received}/received`, {method:'POST'}).then(x=>{ if(x){ toast('ขอบคุณครับ'); this.track(x.id); } });
       const t = e.target.closest('[data-track]'), s = e.target.closest('[data-step]'), k = e.target.closest('[data-stock]');
       if(t) this.track(t.dataset.track);
       if(s) this.step(s.dataset.order, s.dataset.step);
@@ -31,7 +33,8 @@ registerModule('logistics', {
     if(!o) return;
     document.getElementById('lgTrack').innerHTML = `<p><b>ออเดอร์ #${o.id}</b> · ${baht(o.total)}${o.tracking?` · เลขพัสดุ <b>${esc(o.tracking)}</b>`:''}</p>
       <p class="m-muted">ส่งที่: ${esc(o.address)}</p>
-      <ol class="m-timeline">${o.timeline.map(t=>`<li><b>${esc(t.label)}</b> <small class="m-muted">${esc(t.date)}</small><br>${esc(t.note)}</li>`).join('')}</ol>`;
+      <ol class="m-timeline">${o.timeline.map(t=>`<li><b>${esc(t.label)}</b> <small class="m-muted">${esc(t.date)}</small><br>${esc(t.note)}</li>`).join('')}</ol>
+      ${o.status==='shipped' ? `<button class="btn-primary" data-received="${o.id}">ได้รับสินค้าแล้ว (โอนเงินให้ผู้ขาย)</button>` : ''}`;
   },
   async loadQueue(){
     const d = await api('/logistics/queue');

@@ -17,6 +17,7 @@ from app.models.cloud import CloudFile
 from app.models.wallet import Wallet, WalletRequest
 from app.models.shop import Order, OrderItem, ORDER_STATUS_LABELS
 from app.models.market import Listing, Deal
+from app.models.moderation import Moderation
 from app.services.wallet_ops import get_wallet
 
 router = APIRouter()
@@ -76,6 +77,7 @@ def admin_stats(request: Request, db: Session = Depends(get_db)):
         "active_users": db.query(User).filter(User.is_active == True).count(),
         "money_in_wallets": round(_num(db.query(func.sum(Wallet.balance)).scalar()), 2),
         "pending_wallet_requests": db.query(WalletRequest).filter(WalletRequest.status == "pending").count(),
+        "pending_content": db.query(Moderation).filter(Moderation.status == "pending").count(),
         "orders": len(orders), "sales": round(sales, 2),
         "orders_by_status": [{"status": k, "label": ORDER_STATUS_LABELS.get(k, k), "count": v} for k, v in by_status.items()],
         "top_products": [{"name": n, "qty": int(q or 0)} for n, q in top],

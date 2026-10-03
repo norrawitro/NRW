@@ -6,6 +6,7 @@ import os, sys, tempfile
 db_file = tempfile.mktemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{db_file}"
 os.environ.setdefault("SECRET_KEY", "test")
+os.environ["MODERATION"] = "off"          # ทดสอบระบบซื้อขาย — การอนุมัติทดสอบใน smoke_moderation.py
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
