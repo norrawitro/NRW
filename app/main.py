@@ -26,7 +26,7 @@ except Exception as e:
     print(f"⚠️  Database init skipped: {e}")
 
 app = FastAPI(
-    title="NRW Server",
+    title="WKW (Workkaweb) Server",
     description="Norrawit Roopsoong Web — Multi-purpose server",
     version="1.0.0"
 )
@@ -78,10 +78,11 @@ app.include_router(health.router,      prefix="/health",  tags=["Health"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    with open("app/templates/nora-web.html", "r", encoding="utf-8") as f:
+    with open("app/templates/wkw.html", "r", encoding="utf-8") as f:
         return f.read()
 
-@app.get("/nora-web", response_class=HTMLResponse)
-async def nora_web():
-    with open("app/templates/nora-web.html", "r", encoding="utf-8") as f:
+@app.get("/wkw", response_class=HTMLResponse)
+@app.get("/nora-web", response_class=HTMLResponse)   # ลิงก์เก่า (ชื่อเดิม Nora-Web) ยังใช้ได้
+async def wkw_page():
+    with open("app/templates/wkw.html", "r", encoding="utf-8") as f:
         return f.read()

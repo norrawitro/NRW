@@ -1,4 +1,6 @@
-# NRW — Norrawit Roopsoong Web
+# WKW — Workkaweb
+
+(ชื่อเดิม Nora-Web / NRW)
 
 Multi-purpose server สำหรับ Norrawit Roopsoong (Gnoom)
 
@@ -84,7 +86,7 @@ myserver/
 │   │   └── game.py      # /game/*
 │   ├── models/          # SQLAlchemy models
 │   ├── templates/       # HTML (Jinja2)
-│   │   ├── nora-web.html    # Main page (v2)
+│   │   ├── wkw.html         # Main page
 │   │   └── index.html
 │   └── static/          # CSS, JS, Images
 ├── nora-web_v2.html     # Standalone v2 design
@@ -98,5 +100,6 @@ myserver/
 
 ## Changelog
 
+- **v3** — เปลี่ยนชื่อแบรนด์เป็น WKW (Workkaweb)
 - **v2** — nora-web redesign with new design system (dark/light, responsive)
 - **v1** — initial FastAPI + Tailscale Funnel setup

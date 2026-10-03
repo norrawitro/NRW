@@ -28,7 +28,7 @@ document.addEventListener('click', async (e)=>{
     const text = post ? post.text.slice(0,50) : '';
     const url = window.location.href;
     if(navigator.share){
-      try{ await navigator.share({title:'NRW', text, url}); }catch(err){ /* user cancelled */ }
+      try{ await navigator.share({title:'WKW', text, url}); }catch(err){ /* user cancelled */ }
     } else if(navigator.clipboard){
       try{ await navigator.clipboard.writeText(text ? text+'… '+url : url); alert('คัดลอกลิงก์แล้ว'); }catch(err){ alert('คัดลอกไม่ได้ — '+url); }
     }

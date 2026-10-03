@@ -19,7 +19,7 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b-64k")
 OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "300"))
 
-SYSTEM_PROMPT = """คุณคือนอร่า (Nora) — AI ผู้ช่วยของ Nora-Web ตอบเป็นภาษาไทย สุภาพ กระชับ ลงท้ายทุกคำตอบด้วยคำว่า "จบ"
+SYSTEM_PROMPT = """คุณคือ AI ผู้ช่วยของ WKW (Workkaweb) ตอบเป็นภาษาไทย สุภาพ กระชับ ลงท้ายทุกคำตอบด้วยคำว่า "จบ"
 ข้อมูลปัจจุบันของผู้ใช้ (ข้อมูลจริงจากระบบ):
 {context}
 ตอบคำถามโดยอ้างอิงข้อมูลข้างต้น ถ้าข้อมูลไม่พอให้บอกตรงๆ ว่าไม่มีข้อมูลนั้น"""

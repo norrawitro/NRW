@@ -2,7 +2,7 @@
    ยังแสดงโฆษณา 1 ชิ้นบนหน้าแรก (#homeAd) ด้วย
    API: GET /ads/serve · GET/POST /ads · GET /ads/admin/all · POST /ads/{id}/toggle */
 registerModule('ads', {
-  sub: 'ลงโฆษณาบนหน้าแรกของ Nora-Web · จ่ายจากกระเป๋าเงิน',
+  sub: 'ลงโฆษณาบนหน้าแรกของ WKW · จ่ายจากกระเป๋าเงิน',
   async render(el){
     if(!State.me) return loginGate(el, 'ระบบโฆษณา');
     const d = await api('/ads'); if(!d) return;

@@ -3,7 +3,7 @@
   const input = document.getElementById('searchInput');
   const box = document.getElementById('searchResults');
   let items = [], sel = -1, products = null;
-  const INFO = [['help','❓','คู่มือการใช้งาน'],['about','ℹ️','เกี่ยวกับ Nora-Web'],['privacy','🔒','นโยบายความเป็นส่วนตัว'],
+  const INFO = [['help','❓','คู่มือการใช้งาน'],['about','ℹ️','เกี่ยวกับ WKW'],['privacy','🔒','นโยบายความเป็นส่วนตัว'],
                 ['terms','📜','เงื่อนไขการใช้งาน'],['contact','✉️','ติดต่อทีมงาน']];
 
   async function loadProducts(){

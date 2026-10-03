@@ -37,7 +37,7 @@ def _sellers(db: Session, product_ids) -> dict[int, int]:
     return {r.product_id: r.seller_id for r in db.query(ProductSeller).filter(ProductSeller.product_id.in_(ids)).all()}
 
 
-def product_dict(p: Product, seller_name: str = "Nora-Web") -> dict:
+def product_dict(p: Product, seller_name: str = "WKW") -> dict:
     return {"id": p.id, "name": p.name, "description": p.description or "", "price": p.price,
             "stock": p.stock or 0, "image_url": p.image_url or "", "is_active": p.is_active, "seller": seller_name,
             "created_at": p.created_at.isoformat() if p.created_at else None}
@@ -51,7 +51,7 @@ def order_dict(db: Session, o: Order) -> dict:
             "address": o.address, "tracking": o.tracking,
             "date": o.created_at.strftime("%d/%m/%Y %H:%M") if o.created_at else "—",
             "seller_id": os_.seller_id if os_ else None,
-            "seller": names(db, [os_.seller_id]).get(os_.seller_id) if os_ else "Nora-Web",
+            "seller": names(db, [os_.seller_id]).get(os_.seller_id) if os_ else "WKW",
             "items": [{"product_id": i.product_id, "name": i.name, "price": float(i.price), "qty": i.qty}
                       for i in items]}
 
@@ -70,7 +70,7 @@ def list_products(db: Session = Depends(get_db)):
     sellers = _sellers(db, [p.id for p in products])
     who = names(db, sellers.values())
     imgs = images_map(db, "product", [p.id for p in products])
-    return {"products": [{**product_dict(p, who.get(sellers.get(p.id), "Nora-Web")),
+    return {"products": [{**product_dict(p, who.get(sellers.get(p.id), "WKW")),
                           "images": imgs.get(p.id) or ([p.image_url] if p.image_url else [])} for p in products]}
 
 
@@ -80,7 +80,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     if not p or p.id in hidden_ids(db, "product"):
         raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
     sid = _sellers(db, [p.id]).get(p.id)
-    return product_dict(p, names(db, [sid]).get(sid, "Nora-Web"))
+    return product_dict(p, names(db, [sid]).get(sid, "WKW"))
 
 
 class CartItem(BaseModel):

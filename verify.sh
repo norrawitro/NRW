@@ -131,7 +131,7 @@ step4() {
     echo "── Step 4: ทดสอบครบ ──"
     # 4.1 public page 200
     check "GET / (public)" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/")" "200"
-    check "GET / (funnel)" "$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://nora-web.tail85b885.ts.net/)" "200"
+    check "GET / (funnel)" "$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 ${PUBLIC_URL:-https://nora-web.tail85b885.ts.net}/)" "200"
     # 4.2 news ยังทำงาน
     check "GET /news/posts" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/news/posts")" "200"
     # 4.3 wallet chip ในหน้าเว็บ (UI ดึง API)
