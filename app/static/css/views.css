@@ -1,0 +1,86 @@
+/* views.css — คลาวด์, กระเป๋าเงิน, AI, หน้าต่างรายละเอียดระบบ, footer, responsive (มือถือ) */
+/* ============ CLOUD VIEW ============ */
+.storage-bar-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:18px;}
+.storage-bar{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:8px;}
+.storage-bar .fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--cyan));}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);margin-bottom:14px;flex-wrap:wrap}
+.breadcrumb .seg{cursor:pointer;font-weight:600}
+.breadcrumb .seg:hover{color:var(--primary)}
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+.file-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 10px;
+  text-align:center;box-shadow:var(--shadow);position:relative;}
+.file-card .fic{font-size:30px;margin-bottom:8px}
+.file-card .fn{font-size:12.5px;font-weight:600;word-break:break-word;}
+.file-card .fm{font-size:11px;color:var(--ink-soft);margin-top:4px}
+.file-card .del{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--surface-2);
+  font-size:11px;display:none;}
+.file-card:hover .del{display:grid;place-items:center}
+
+/* ============ WALLET VIEW ============ */
+.wallet-grid{display:grid;grid-template-columns:340px 1fr;gap:22px}
+.tx-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+.tx-table th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);
+  background:var(--surface-2);padding:10px 14px;}
+.tx-table td{padding:11px 14px;font-size:13.5px;border-top:1px solid var(--line)}
+.tx-amt.plus{color:var(--emerald);font-weight:700}
+.tx-amt.minus{color:var(--danger);font-weight:700}
+.tx-status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(16,185,129,.12);color:var(--emerald)}
+.wallet-actions{display:flex;gap:10px;margin-top:14px}
+.inline-form{display:flex;gap:8px;margin-top:10px}
+.inline-form input{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;
+  padding:9px 12px;font-size:13px;color:var(--ink);outline:none;font-family:inherit;}
+.inline-form input:focus{border-color:var(--primary)}
+
+/* ============ AI VIEW ============ */
+.ai-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;height:calc(100vh - 220px);min-height:420px;}
+.ai-messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;}
+.msg{max-width:72%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.5;}
+.msg.ai{align-self:flex-start;background:var(--surface-2);border-bottom-left-radius:4px;}
+.msg.user{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+.ai-quick{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 12px;}
+.ai-input-row{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--line);}
+.ai-input-row input{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;
+  padding:11px 16px;font-size:13.5px;color:var(--ink);outline:none;font-family:inherit;}
+.ai-input-row input:focus{border-color:var(--primary)}
+
+/* ============ MODULE DETAIL DRAWER ============ */
+.overlay{position:fixed;inset:0;background:rgba(10,12,30,.45);z-index:90;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:90vw;background:var(--surface);z-index:91;
+  box-shadow:-12px 0 32px rgba(0,0,0,.18);transform:translateX(100%);transition:transform .25s;padding:22px;overflow-y:auto;}
+.drawer.open{transform:translateX(0)}
+.drawer-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--surface-2);}
+.drawer .dtile{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:26px;color:#fff;margin-bottom:14px;}
+.drawer h3{font-size:18px;margin-bottom:4px}
+.drawer .code{font-size:12px;color:var(--ink-soft);margin-bottom:14px}
+.drawer .phase-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+  padding:4px 10px;border-radius:999px;margin-bottom:16px;}
+.drawer h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);margin:16px 0 6px}
+.drawer p{font-size:13.5px}
+.conn-list{display:flex;flex-wrap:wrap;gap:6px}
+.conn-list span{font-size:12px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);
+  padding:4px 10px;border-radius:999px;}
+.follow-btn{margin-top:18px;width:100%;padding:10px;border-radius:999px;background:var(--primary-soft);
+  color:var(--primary);font-weight:700;font-size:13.5px;}
+.follow-btn.on{background:var(--emerald);color:#fff}
+
+.footer{margin-top:32px;border-top:1px solid var(--line);padding-top:24px}
+.foot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:22px}
+.foot-grid h4{font-size:13px;margin-bottom:10px}
+.foot-grid a{display:block;font-size:13px;color:var(--ink-soft);padding:4px 0}
+.foot-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+  padding:16px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-soft)}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:1100px){.dash{grid-template-columns:1fr}.stream{grid-template-columns:1fr}.wallet-grid{grid-template-columns:1fr}}
+@media (max-width:880px){
+  .sidebar{transform:translateX(-100%)}.main{margin-left:0}
+  .foot-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .brand-name{display:none}.search{max-width:none}.video-row{grid-template-columns:1fr}
+  .main{padding:16px}.foot-grid{grid-template-columns:1fr 1fr}.drawer{width:100vw}
+}

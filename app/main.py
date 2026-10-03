@@ -29,6 +29,15 @@ app = FastAPI(
 
 # Static files & templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+
+@app.middleware("http")
+async def no_cache_static(request: Request, call_next):
+    """ให้เบราว์เซอร์เช็คไฟล์ CSS/JS ใหม่ทุกครั้ง — แก้ไฟล์แล้วกด refresh เห็นผลทันที"""
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 env = Environment(loader=FileSystemLoader("app/templates"))
 
 # Include routers

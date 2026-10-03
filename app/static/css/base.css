@@ -1,0 +1,100 @@
+/* base.css — ตัวแปรสี/ธีม (design system), ส่วนหัว, เมนูด้านข้าง, เลย์เอาต์ */
+/* ============================================================ DESIGN SYSTEM ============================================================ */
+:root{
+  --bg:#EEF1F8; --surface:#FFFFFF; --surface-2:#F7F8FC;
+  --ink:#16182B; --ink-soft:#5B5F76; --line:#E3E6F0;
+  --primary:#4F46E5; --primary-soft:#EEF0FF; --gold:#F59E0B;
+  --cyan:#06B6D4; --emerald:#10B981; --violet:#8B5CF6;
+  --pink:#EC4899; --danger:#EF4444;
+  --phase1:#EF4444; --phase2:#F59E0B; --phase3:#CA8A04; --phase4:#10B981;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 1px 2px rgba(20,24,43,.05), 0 8px 24px rgba(20,24,43,.06);
+  --shadow-lift:0 12px 32px rgba(79,70,229,.18);
+  --header-h:60px; --sidebar-w:260px;
+  --display:system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif;
+  --body:system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0E1020; --surface:#191C32; --surface-2:#21243F;
+  --ink:#F2F3FA; --ink-soft:#9DA2C0; --line:#2C3052;
+  --primary-soft:#262a52; --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--body); background:var(--bg); color:var(--ink); line-height:1.55;
+  -webkit-font-smoothing:antialiased; transition:background .25s, color .25s;
+}
+h1,h2,h3,h4,.display{font-family:var(--display);font-weight:600;line-height:1.2}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:var(--primary);color:#fff}
+.hidden{display:none !important}
+
+/* ============ HEADER ============ */
+.header{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);z-index:50;
+  display:flex;align-items:center;gap:14px;padding:0 16px;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+}
+.hamburger{width:40px;height:40px;border-radius:var(--radius-sm);display:grid;place-items:center;flex-shrink:0;}
+.hamburger:hover{background:var(--surface-2)}
+.hamburger span{display:block;width:18px;height:2px;background:var(--ink);border-radius:2px;position:relative}
+.hamburger span::before,.hamburger span::after{content:"";position:absolute;left:0;width:18px;height:2px;background:var(--ink);border-radius:2px}
+.hamburger span::before{top:-6px}.hamburger span::after{top:6px}
+.brand{display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer}
+.brand-mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--primary),var(--violet));color:#fff;
+  font-weight:700;font-size:18px;box-shadow:0 4px 12px rgba(79,70,229,.4);}
+.brand-name{font-weight:700;font-size:18px;letter-spacing:-.3px}
+.brand-name span{color:var(--primary)}
+.search{flex:1;max-width:520px;height:42px;display:flex;align-items:center;gap:8px;padding:0 14px;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:999px;color:var(--ink-soft);}
+.search:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.search input{flex:1;border:none;background:none;outline:none;font-size:14px;color:var(--ink)}
+.header-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.chip{display:flex;align-items:center;gap:6px;height:38px;padding:0 12px;
+  border-radius:999px;background:var(--surface-2);border:1px solid var(--line);
+  font-weight:600;font-size:13px;white-space:nowrap;}
+.chip.wallet{color:var(--gold)}
+/* ── Tooltip ────────────────────────────────────────── */
+[title]{position:relative}
+[title]:hover::after{
+  content:attr(title);
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:rgba(22,24,43,.88);color:#fff;font-size:12px;font-weight:500;
+  white-space:nowrap;padding:5px 10px;border-radius:8px;pointer-events:none;
+  z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.25);
+  animation:tipIn .15s ease;
+}
+[title]:hover::before{
+  content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:rgba(22,24,43,.88);pointer-events:none;z-index:9999;
+}
+@keyframes tipIn{from{opacity:0;transform:translateX(-50%) translateY(4px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* ── End Tooltip ─────────────────────────────────────── */
+.icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface-2);border:1px solid var(--line);font-size:17px;}
+.avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--gold),var(--pink));color:#fff;
+  font-weight:600;font-size:15px;cursor:pointer;}
+
+/* ============ LAYOUT ============ */
+.layout{display:flex;padding-top:var(--header-h);min-height:100vh}
+.sidebar{position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--sidebar-w);z-index:40;
+  background:var(--surface);border-right:1px solid var(--line);padding:14px 12px;overflow-y:auto;}
+.nav-group-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--ink-soft);padding:14px 12px 6px;}
+.phase-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--radius-sm);
+  font-weight:500;font-size:14px;color:var(--ink-soft);position:relative;}
+.nav-item:hover{background:var(--surface-2);color:var(--ink)}
+.nav-item.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.nav-item .ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex-shrink:0;}
+.nav-item.locked{opacity:.55}
+.nav-item .soon{margin-left:auto;font-size:10px;font-weight:700;background:var(--surface-2);color:var(--ink-soft);
+  padding:2px 6px;border-radius:999px;white-space:nowrap;}
+.main{flex:1;margin-left:var(--sidebar-w);padding:22px;min-width:0;}
+body.sidebar-collapsed .sidebar{transform:translateX(-100%)}
+body.sidebar-collapsed .main{margin-left:0}

@@ -156,12 +156,17 @@ def download_file(file_id: int, request: Request, db: Session = Depends(get_db))
 
 # ─── DELETE /cloud/items/{id} — โฟลเดอร์ (พร้อมไฟล์ในนั้น) หรือ ไฟล์ ──
 @router.delete("/items/{item_id}")
-def delete_item(item_id: int, request: Request, db: Session = Depends(get_db)):
+def delete_item(item_id: int, request: Request, type: str | None = None, db: Session = Depends(get_db)):
+    """type=folder|file — id ของโฟลเดอร์กับไฟล์มาจากคนละตาราง จึงซ้ำกันได้
+    ถ้าไม่ระบุ type จะลองโฟลเดอร์ก่อน (แบบเดิม) — หน้าเว็บส่ง type มาเสมอ"""
     user = _require_user(request, db)
+    if type not in (None, "", "folder", "file"):
+        raise HTTPException(status_code=400, detail="type ต้องเป็น folder หรือ file")
 
-    # ลองเป็นโฟลเดอร์ก่อน
-    folder = db.query(CloudFolder).filter(CloudFolder.id == item_id,
-                                          CloudFolder.user_id == user.id).first()
+    folder = None
+    if type != "file":
+        folder = db.query(CloudFolder).filter(CloudFolder.id == item_id,
+                                              CloudFolder.user_id == user.id).first()
     if folder:
         # ลบไฟล์ในโฟลเดอร์ + โฟลเดอร์ลูก (recursive)
         def _rm(folders: list[CloudFolder]):
@@ -181,8 +186,10 @@ def delete_item(item_id: int, request: Request, db: Session = Depends(get_db)):
         return {"ok": True}
 
     # เป็นไฟล์
-    f = db.query(CloudFile).filter(CloudFile.id == item_id,
-                                   CloudFile.user_id == user.id).first()
+    f = None
+    if type != "folder":
+        f = db.query(CloudFile).filter(CloudFile.id == item_id,
+                                       CloudFile.user_id == user.id).first()
     if f:
         p = os.path.join(UPLOAD_ROOT, f.path)
         if os.path.isfile(p):
