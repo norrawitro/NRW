@@ -58,3 +58,25 @@ class OrderSeller(Base):
     order_id  = Column(Integer, ForeignKey("orders.id"), primary_key=True)
     seller_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     paid_out  = Column(Integer, nullable=False, default=0)    # 0/1
+
+
+class StockMove(Base):
+    """ความเคลื่อนไหวสต็อก 1 รายการ — รับเข้า/เบิกออก/ตรวจนับ/ขาย/คืนจากยกเลิก"""
+    __tablename__ = "stock_moves"
+
+    id         = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=True)
+    kind       = Column(String(20), nullable=False)        # in / out / count / sale / return / create / edit
+    change     = Column(Integer, nullable=False)           # + เข้า, - ออก
+    balance    = Column(Integer, nullable=False)           # คงเหลือหลังรายการนี้
+    note       = Column(String(200), nullable=False, default="")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class StockSetting(Base):
+    """ตั้งค่าสต็อกต่อสินค้า — แจ้งเตือนเมื่อเหลือไม่เกิน low_at ชิ้น"""
+    __tablename__ = "stock_settings"
+
+    product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
+    low_at     = Column(Integer, nullable=False, default=5)

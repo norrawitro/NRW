@@ -17,6 +17,7 @@ from app.models.shop import Order, OrderItem, ShipmentEvent, OrderSeller, ORDER_
 from app.routers.shop import order_dict
 from app.models.wallet import TokenTransaction
 from app.services.wallet_ops import move_money, move_tokens, get_wallet
+from app.services.stock import move_stock
 
 router = APIRouter()
 
@@ -82,7 +83,7 @@ def apply_status(db: Session, o: Order, status: str, actor: str, tracking: str =
         for it in db.query(OrderItem).filter(OrderItem.order_id == o.id).all():
             p = db.query(Product).filter(Product.id == it.product_id).with_for_update().first()
             if p:
-                p.stock = (p.stock or 0) + it.qty
+                move_stock(db, p, it.qty, "return", f"ออเดอร์ #{o.id} ถูกยกเลิก (โดย {actor})")
     if status == "delivered" and seller and not seller.paid_out:
         move_money(db, seller.seller_id, Decimal(str(o.total)), "sale", f"รายได้จากออเดอร์ #{o.id}")
         seller.paid_out = 1
@@ -140,12 +141,10 @@ class StockAdjust(BaseModel):
 
 @router.post("/inventory/{product_id}")
 def adjust_stock(product_id: int, body: StockAdjust, request: Request, db: Session = Depends(get_db)):
-    current_admin(request, db)
+    admin = current_admin(request, db)
     p = db.query(Product).filter(Product.id == product_id).with_for_update().first()
     if not p:
         raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
-    if (p.stock or 0) + body.delta < 0:
-        raise HTTPException(status_code=400, detail="สต็อกติดลบไม่ได้")
-    p.stock = (p.stock or 0) + body.delta
+    move_stock(db, p, body.delta, "in" if body.delta > 0 else "out", "ปรับโดยผู้ดูแล", admin.id)
     db.commit()
     return {"id": p.id, "stock": p.stock}

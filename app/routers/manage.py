@@ -17,6 +17,7 @@ from app.models.product import Product
 from app.routers.wallet import request_dict
 from app.services.wallet_ops import get_wallet, move_money, move_tokens
 
+from app.services.stock import set_stock
 router = APIRouter()
 
 
@@ -137,9 +138,13 @@ def all_products(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/api/products")
 def create_product(body: ProductIn, request: Request, db: Session = Depends(get_db)):
-    current_admin(request, db)
-    p = Product(**body.model_dump())
+    admin = current_admin(request, db)
+    data = body.model_dump()
+    stock = data.pop("stock")
+    p = Product(**data, stock=0)
     db.add(p)
+    db.flush()
+    set_stock(db, p, stock, "create", "ยอดตั้งต้นตอนลงสินค้า", admin.id)
     db.commit()
     db.refresh(p)
     return product_dict(p)
@@ -147,11 +152,13 @@ def create_product(body: ProductIn, request: Request, db: Session = Depends(get_
 
 @router.put("/api/products/{product_id}")
 def update_product(product_id: int, body: ProductIn, request: Request, db: Session = Depends(get_db)):
-    current_admin(request, db)
-    p = db.query(Product).filter(Product.id == product_id).first()
+    admin = current_admin(request, db)
+    p = db.query(Product).filter(Product.id == product_id).with_for_update().first()
     if not p:
         raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
-    for k, v in body.model_dump().items():
+    data = body.model_dump()
+    set_stock(db, p, data.pop("stock"), "edit", "แก้จำนวนในแผงผู้ดูแล", admin.id)
+    for k, v in data.items():
         setattr(p, k, v)
     db.commit()
     return product_dict(p)

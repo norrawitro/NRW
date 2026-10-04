@@ -100,7 +100,8 @@ registerModule('shop', {
         <p class="m-muted">เงินจะเข้ากระเป๋าของคุณเมื่อผู้ซื้อกด "ได้รับสินค้าแล้ว"</p></div>
       <div class="m-card"><h3>🏪 สินค้าของฉัน (${p.products.length})</h3>${p.products.map(x=>`<div class="m-row"><span>${esc(x.name)}${x.is_active?'':' <small class="m-muted">(ปิดขาย)</small>'} ${modBadge(x.mod)}<br>
           <small class="m-muted">${baht(x.price)} · เหลือ ${x.stock}${x.stock<=5?' ⚠️':''}</small></span><button class="btn-ghost m-sm" data-edit="${x.id}">แก้ไข</button></div>`).join('')
-        || '<p class="m-muted">ยังไม่มีสินค้า</p>'}<button class="btn-primary m-full" data-tab="new">➕ ลงสินค้าใหม่</button></div></div>`;
+        || '<p class="m-muted">ยังไม่มีสินค้า</p>'}<button class="btn-primary m-full" data-tab="new">➕ ลงสินค้าใหม่</button>
+        <button class="btn-ghost m-full" style="margin-top:8px" onclick="State.lgTab='stock';showView('logistics')">🏬 จัดการสต็อก (รับเข้า/เบิก/ตรวจนับ/ประวัติ)</button></div></div>`;
   },
 
   /* ── ลงสินค้า / แก้ไข ── */

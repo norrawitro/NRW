@@ -80,3 +80,15 @@
   .dm-wrap:not(.has-peer) .dm-main{display:none}
   .dm-head #dmBack{display:inline-flex}
 }
+/* สต็อกสินค้า (stock.js) */
+.st-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.st-card{margin:0;display:flex;flex-direction:column;gap:4px}
+.st-card small{color:var(--ink-soft);font-size:12px}
+.st-card b{font-size:22px}
+.st-warn b{color:#d97706}.st-bad b{color:#e5484d}
+.st-name{display:flex;gap:10px;align-items:center}
+.st-name img,.st-noimg{width:40px;height:40px;border-radius:8px;object-fit:cover;flex:none;background:var(--surface-2);display:grid;place-items:center}
+.st-qty{font-size:16px}
+.st-acts{white-space:nowrap}
+.st-acts .m-sm{margin:2px 0}
+.st-form{max-width:520px}

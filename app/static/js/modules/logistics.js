@@ -1,32 +1,39 @@
-/* modules/logistics.js — คลังสินค้า/ขนส่ง
-   สมาชิก: ดูเส้นทางพัสดุของออเดอร์ตัวเอง
-   ผู้ดูแล: คิวออเดอร์ (แพ็ก → ส่ง → ได้รับ / ยกเลิก) + สต็อกสินค้า
+/* modules/logistics.js — คลังสินค้า/ขนส่ง (3 แท็บ)
+   🚚 พัสดุของฉัน: เส้นทางพัสดุ · 🏬 สต็อกสินค้า: modules/stock.js (StockUI)
+   🛠️ คิวจัดส่ง (ผู้ดูแล): แพ็ก → ส่ง → ได้รับ / ยกเลิก
    API: GET /shop/orders · GET /logistics/orders/{id} · GET /logistics/queue · POST /logistics/orders/{id}/status · GET/POST /logistics/inventory */
 const STEP_LABEL = {packed:'📦 แพ็กแล้ว', shipped:'🚚 ส่งแล้ว', delivered:'✅ ได้รับแล้ว', cancelled:'✕ ยกเลิก'};
 
 registerModule('logistics', {
-  sub: 'ติดตามพัสดุ · ผู้ดูแลจัดการคิวจัดส่งและสต็อก',
+  sub: 'ติดตามพัสดุ · จัดการสต็อกสินค้า (รับเข้า/เบิก/ตรวจนับ/ประวัติ) · ผู้ดูแลจัดการคิวจัดส่ง',
   async render(el){
-    if(!State.me){ loginGate(el, 'ติดตามพัสดุ'); return; }
-    el.innerHTML = `<div class="m-split"><div class="m-card"><h3>📦 พัสดุของฉัน</h3><div id="lgMine"></div></div>
-      <div class="m-card"><h3>🧭 เส้นทางพัสดุ</h3><div id="lgTrack"><p class="m-muted">เลือกออเดอร์ทางซ้าย</p></div></div></div>
-      ${State.me.is_admin ? `<div class="m-card"><h3>🛠️ คิวจัดส่ง (ผู้ดูแล)</h3><div id="lgQueue"></div></div>
-      <div class="m-card"><h3>🏬 สต็อกสินค้า (ผู้ดูแล)</h3><div id="lgStock"></div></div>` : ''}`;
+    if(!State.me){ loginGate(el, 'คลังสินค้า/ขนส่ง'); return; }
+    const tab = State.lgTab || 'parcel'; State.lgTab = null;
+    el.innerHTML = `<div class="m-tabs"><button class="m-tab" data-lgtab="parcel">🚚 พัสดุของฉัน</button><button class="m-tab" data-lgtab="stock">🏬 สต็อกสินค้า</button>
+      ${State.me.is_admin?'<button class="m-tab" data-lgtab="queue">🛠️ คิวจัดส่ง (ผู้ดูแล)</button>':''}</div><div id="lgBody"></div>`;
     el.onclick = e=>{
+      const tb = e.target.closest('[data-lgtab]'); if(tb) return this.tab(tb.dataset.lgtab);
       const r = e.target.closest('[data-received]');
       if(r && confirm('ได้รับสินค้าครบถ้วนแล้ว? ระบบจะโอนเงินให้ผู้ขาย')) api(`/logistics/orders/${r.dataset.received}/received`, {method:'POST'}).then(x=>{ if(x){ toast('ขอบคุณครับ'); this.track(x.id); } });
-      const t = e.target.closest('[data-track]'), s = e.target.closest('[data-step]'), k = e.target.closest('[data-stock]');
+      const t = e.target.closest('[data-track]'), s = e.target.closest('[data-step]');
       if(t) this.track(t.dataset.track);
       if(s) this.step(s.dataset.order, s.dataset.step);
-      if(k) this.stock(k.dataset.stock);
     };
+    this.tab(tab);
+  },
+  async tab(name){
+    document.querySelectorAll('[data-lgtab]').forEach(b=>b.classList.toggle('on', b.dataset.lgtab===name));
+    const body = document.getElementById('lgBody');
+    if(name==='stock') return StockUI.render(body);
+    if(name==='queue'){ body.innerHTML = '<div class="m-card"><h3>🛠️ คิวจัดส่ง</h3><div id="lgQueue"></div></div>'; return this.loadQueue(); }
+    body.innerHTML = `<div class="m-split"><div class="m-card"><h3>📦 พัสดุของฉัน</h3><div id="lgMine"></div></div>
+      <div class="m-card"><h3>🧭 เส้นทางพัสดุ</h3><div id="lgTrack"><p class="m-muted">เลือกออเดอร์ทางซ้าย</p></div></div></div>`;
     const d = await api('/shop/orders');
     document.getElementById('lgMine').innerHTML = d && d.orders.length ? d.orders.map(o=>`
       <div class="m-row"><span>#${o.id} · ${baht(o.total)}<br><small class="m-muted">${esc(o.date)}</small></span>
       <button class="btn-ghost" data-track="${o.id}">${esc(o.status_label)} ›</button></div>`).join('')
       : '<p class="m-muted">ยังไม่มีออเดอร์ — <a href="#" data-view="shop" class="m-link">ไปร้านค้า</a></p>';
     if(d && d.orders.length) this.track(d.orders[0].id);
-    if(State.me.is_admin){ this.loadQueue(); this.loadStock(); }
   },
   async track(id){
     const o = await api(`/logistics/orders/${id}`);
@@ -48,18 +55,6 @@ registerModule('logistics', {
     let tracking = '';
     if(status==='shipped'){ tracking = prompt('เลขพัสดุ (ไม่บังคับ)') || ''; }
     if(status==='cancelled' && !confirm(`ยกเลิกออเดอร์ #${id}? (คืนเงิน + คืนสต็อกให้อัตโนมัติ)`)) return;
-    if(await api(`/logistics/orders/${id}/status`, {json:{status, tracking}})){ toast('อัปเดตแล้ว'); this.loadQueue(); this.loadStock(); }
-  },
-  async loadStock(){
-    const d = await api('/logistics/inventory');
-    document.getElementById('lgStock').innerHTML = d && d.products.length ? `<table class="m-table"><tr><th>สินค้า</th><th>คงเหลือ</th><th></th></tr>
-      ${d.products.map(p=>`<tr class="${p.low?'m-warn':''}"><td>${esc(p.name)}${p.is_active?'':' <small class="m-muted">(ปิดขาย)</small>'}</td>
-        <td>${p.stock}${p.low?' ⚠️':''}</td><td><button class="btn-ghost m-sm" data-stock="${p.id}">± ปรับ</button></td></tr>`).join('')}</table>`
-      : '<p class="m-muted">ยังไม่มีสินค้า</p>';
-  },
-  async stock(id){
-    const delta = parseInt(prompt('เพิ่ม/ลดสต็อก (เช่น 10 หรือ -2)'), 10);
-    if(!delta) return;
-    if(await api(`/logistics/inventory/${id}`, {json:{delta}})) this.loadStock();
+    if(await api(`/logistics/orders/${id}/status`, {json:{status, tracking}})){ toast('อัปเดตแล้ว'); this.loadQueue(); }
   },
 });

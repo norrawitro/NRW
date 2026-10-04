@@ -24,6 +24,7 @@ from app.services.wallet_ops import move_money, move_tokens, to_money
 from app.services.moderation import submit, hidden_ids, badge, ensure_visible
 from app.services.media import set_images, images_map
 from app.services.helpers import usernames
+from app.services.stock import move_stock, set_stock
 
 router = APIRouter()
 TOKEN_PER_BAHT = int(os.getenv("TOKEN_PER_BAHT", "100"))
@@ -128,7 +129,7 @@ def create_order(body: OrderCreate, request: Request, db: Session = Depends(get_
         move_money(db, user.id, -total, "purchase", f"ซื้อสินค้า ออเดอร์ #{order.id}")   # เงินไม่พอ → 400 + rollback ทั้งหมด
         for pid in pids:
             p = found[pid]
-            p.stock = (p.stock or 0) - qty_by_id[pid]
+            move_stock(db, p, -qty_by_id[pid], "sale", f"ออเดอร์ #{order.id}", user.id)
             db.add(OrderItem(order_id=order.id, product_id=pid, name=p.name, price=p.price, qty=qty_by_id[pid]))
         if seller_id:
             db.add(OrderSeller(order_id=order.id, seller_id=seller_id, paid_out=0))
@@ -191,9 +192,11 @@ def add_product(body: ProductIn, request: Request, db: Session = Depends(get_db)
     data = body.model_dump(exclude={"images"})
     data["price"] = float(to_money(body.price))
     data["image_url"] = _clean_image(body.images[0] if body.images else body.image_url)
-    p = Product(**data)
+    stock = data.pop("stock")
+    p = Product(**data, stock=0)
     db.add(p)
     db.flush()
+    set_stock(db, p, stock, "create", "ยอดตั้งต้นตอนลงสินค้า", me.id)
     db.add(ProductSeller(product_id=p.id, seller_id=me.id))
     set_images(db, "product", p.id, body.images)
     status = submit(db, "product", p.id, me)
@@ -208,6 +211,7 @@ def edit_product(product_id: int, body: ProductIn, request: Request, db: Session
     data = body.model_dump(exclude={"images"})
     data["price"] = float(to_money(body.price))
     data["image_url"] = _clean_image(body.images[0] if body.images else body.image_url)
+    set_stock(db, p, data.pop("stock"), "edit", "แก้จำนวนในฟอร์มสินค้า", me.id)
     for k, v in data.items():
         setattr(p, k, v)
     set_images(db, "product", p.id, body.images)
