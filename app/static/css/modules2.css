@@ -92,3 +92,23 @@
 .st-acts{white-space:nowrap}
 .st-acts .m-sm{margin:2px 0}
 .st-form{max-width:520px}
+/* พนักงาน/เงินเดือน (hr*.js) */
+.hr-nav{flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.hr-grid td,.hr-grid th{text-align:center;min-width:92px}
+.hr-grid td:first-child,.hr-grid th:first-child{text-align:left;min-width:120px}
+.hr-cell{cursor:pointer;padding:4px}
+.hr-cell:hover{background:var(--surface-2)}
+.hr-add{color:var(--ink-soft);font-size:18px}
+.hr-shift{display:inline-flex;flex-direction:column;border-radius:8px;padding:4px 8px;font-size:12px;line-height:1.3;background:var(--surface-2)}
+.hr-shift small{font-size:10.5px;opacity:.85}
+.hr-planned{background:#e0e7ff;color:#3730a3}.hr-worked{background:#dcfce7;color:#166534}
+.hr-absent{background:#fee2e2;color:#991b1b}.hr-leave{background:#fef3c7;color:#92400e}
+.hr-today{background:var(--primary-soft)}
+.hr-legend .hr-shift{display:inline-block;margin-right:4px}
+.hr-editor{max-width:560px}
+.hr-month{display:flex;align-items:center;gap:8px}
+.hr-slip h4{margin:8px 0 6px;font-size:13px;color:var(--ink-soft)}
+.hr-total{border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
+.hr-net{font-size:18px;border-top:2px solid var(--line);padding-top:10px;margin:10px 0}
+.hr-adj{background:var(--surface-2);border-radius:10px;padding:10px;margin:10px 0}
+@media print{body *{visibility:hidden}.hr-slip,.hr-slip *{visibility:visible}.hr-slip{position:absolute;left:0;top:0;width:100%}.hr-slip button,.hr-slip .hr-adj{display:none}}

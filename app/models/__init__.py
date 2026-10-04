@@ -12,3 +12,4 @@ from app.models.community import Video, GameScore, Event, Ticket, CreatorPage, C
 from app.models.moderation import Moderation
 from app.models.media import ItemImage
 from app.models.wanted import WantedPost, WantedOffer
+from app.models.hr import Staff, Shift, PayAdjust, PayRun
