@@ -8,7 +8,12 @@ db_file = tempfile.mktemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{db_file}"
 os.environ.setdefault("SECRET_KEY", "test")
 os.environ["OLLAMA_URL"] = "http://127.0.0.1:9"
-os.environ["AGENT_ENTER_DELAY"] = "0.05"          # ปิดไว้ → ใช้ `ollama ps` (ปลอม)
+os.environ["AGENT_ENTER_DELAY"] = "0.05"
+# ใช้ค่าทดสอบเสมอ — ไม่ให้ค่าใน .env ของเครื่องจริง (ปุ่มโมเดล, ชื่อ session, เจ้าของ) มาทำให้ผลเปลี่ยน
+os.environ.update(AGENT_TMUX_TARGET="hermes", AGENT_STOP="C-c", AGENT_RESET="/new", AGENT_START_CMD="hermes", AGENT_OWNER="",
+                  AGENT_PASSWORD_HASH="", AGENT_MODELS="9arm Gateway=/model --provider 9arm;"
+                  "Coder 30B=/model qwen3-coder:30b --provider ollama-launch;Coder 3B=/model qwen2.5-coder:3b --provider ollama-launch;"
+                  "Qwen3.5 2B=/model qwen3.5:2b --provider ollama-launch")          # ปิดไว้ → ใช้ `ollama ps` (ปลอม)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
