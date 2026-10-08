@@ -114,4 +114,5 @@
 - `agent.js` (`AgentUI`) — ต่อท้ายหน้าศูนย์ AI เมื่อเป็นผู้ดูแล; ลูกค้าไม่เห็นเลย (API ตอบ 403)
 - ล็อกด้วยรหัสผ่านแยก (`set_agent_password.py`), สถานะ CPU/RAM/GPU/Ollama ติดบนจอ อัปเดตทุก 2.5 วินาที
 - ปุ่มโมเดล / Queue / Stop / Reset / ส่ง → `app/routers/agent.py` → `app/services/agent_host.py` (tmux send-keys)
+- โหมด 🤖 Hermes / 🐚 Shell (bash ใน WSL, tmux session `shell`) ใช้จอเดียวกัน — API รับ `?target=hermes|shell`
 - ตั้งชื่อ tmux session, คำสั่งโมเดล, Stop, Reset ได้ใน `.env` (ดู `.env.example`)

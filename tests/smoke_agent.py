@@ -10,7 +10,7 @@ os.environ.setdefault("SECRET_KEY", "test")
 os.environ["OLLAMA_URL"] = "http://127.0.0.1:9"
 os.environ["AGENT_ENTER_DELAY"] = "0.05"
 # ใช้ค่าทดสอบเสมอ — ไม่ให้ค่าใน .env ของเครื่องจริง (ปุ่มโมเดล, ชื่อ session, เจ้าของ) มาทำให้ผลเปลี่ยน
-os.environ.update(AGENT_TMUX_TARGET="hermes", AGENT_STOP="C-c", AGENT_RESET="/new", AGENT_START_CMD="hermes", AGENT_OWNER="",
+os.environ.update(AGENT_SHELL_TARGET="shell", AGENT_TMUX_TARGET="hermes", AGENT_STOP="C-c", AGENT_RESET="/new", AGENT_START_CMD="hermes", AGENT_OWNER="",
                   AGENT_PASSWORD_HASH="", AGENT_MODELS="9arm Gateway=/model --provider 9arm;"
                   "Coder 30B=/model qwen3-coder:30b --provider ollama-launch;Coder 3B=/model qwen2.5-coder:3b --provider ollama-launch;"
                   "Qwen3.5 2B=/model qwen3.5:2b --provider ollama-launch")          # ปิดไว้ → ใช้ `ollama ps` (ปลอม)
@@ -117,6 +117,24 @@ calls.clear(); boss.post("/agent/session", json={"action": "restart"}, headers=H
 check("รีสตาร์ต = kill-session แล้วสร้างใหม่", ["tmux", "kill-session", "-t", "hermes"] in calls and any(c[:2] == ["tmux", "new-session"] for c in calls))
 check("state มีรายการปุ่มคีย์", "C-c" in [k["key"] for k in boss.get("/agent/state").json()["keys"]])
 
+print("── โหมด Shell (bash ใน WSL) ──")
+calls.clear(); boss.post("/agent/send?target=shell", json={"text": "ls -la"}, headers=H)
+check("Shell: ส่งเข้า tmux session shell", calls[0] == ["tmux", "send-keys", "-t", "shell", "-l", "ls -la"] and calls[1] == ["tmux", "send-keys", "-t", "shell", "Enter"])
+calls.clear(); boss.post("/agent/send?target=shell", json={"text": "cd ~/projects\ngit status"}, headers=H)
+check("Shell: หลายบรรทัด = รันทีละคำสั่ง", [c[-1] for c in calls if "-l" in c] == ["cd ~/projects", "git status"])
+check("Shell: เกิน 20 คำสั่ง → 400", boss.post("/agent/send?target=shell", json={"text": "\n".join(["ls"] * 21)}, headers=H).status_code == 400)
+calls.clear(); boss.post("/agent/stop?target=shell", headers=H)
+check("Shell: Stop = Ctrl+C ที่ session shell", calls == [["tmux", "send-keys", "-t", "shell", "C-c"]])
+check("เป้าหมายแปลก → 422", boss.post("/agent/send?target=root", json={"text": "x"}, headers=H).status_code == 422)
+tmux["alive"] = False; calls.clear()
+boss.post("/agent/session?target=shell", json={"action": "start"}, headers=H)
+check("Shell: เริ่ม session = tmux new -s shell (bash เปล่า ไม่พิมพ์ hermes)",
+      any(c[:5] == ["tmux", "new-session", "-d", "-s", "shell"] for c in calls) and not any("-l" in c for c in calls))
+st = boss.get("/agent/status?target=shell").json()
+check("Shell: สถานะ/หน้าจอของ session shell", st["tmux"]["target"] == "shell" and st["tmux"]["mode"] == "shell"
+      and ["tmux", "capture-pane", "-p", "-J", "-t", "shell", "-S", "-120"] in calls)
+check("state มีทั้ง Hermes และ Shell", [t["id"] for t in boss.get("/agent/state").json()["targets"]] == ["hermes", "shell"])
+
 print("── สถานะ ──")
 st = boss.get("/agent/status").json()
 check("CPU/RAM เป็น %", isinstance(st["cpu"], float) and 0 <= st["cpu"] <= 100 and st["mem"] is not None)
@@ -124,7 +142,7 @@ check("GPU % + หน่วยความจำ GPU", st["gpu"] == 37 and st["g
 m = {x["name"]: x for x in st["ollama"]["models"]}
 check("Ollama: โมเดลแบ่ง CPU 48% / GPU 52%", m["qwen3-coder:30b"]["cpu_pct"] == 48 and m["qwen3-coder:30b"]["gpu_pct"] == 52)
 check("Ollama: โมเดล 100% GPU", m["qwen2.5-coder:3b"]["gpu_pct"] == 100 and m["qwen2.5-coder:3b"]["cpu_pct"] == 0)
-check("หน้าจอ terminal + ประวัติคำสั่ง", "พร้อมทำงาน" in st["screen"] and st["history"][0]["action"] == "restart")
+check("หน้าจอ terminal + ประวัติคำสั่ง", "พร้อมทำงาน" in st["screen"] and st["history"][0]["target"] == "shell")
 
 print("── ล็อก / เปลี่ยนรหัส ──")
 boss.post("/agent/lock")

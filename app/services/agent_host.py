@@ -10,6 +10,7 @@
   AGENT_ENTER_DELAY=0.6                         รอกี่วินาทีหลังพิมพ์ก่อนกด Enter (Hermes มองว่าข้อความ+Enter ที่มาพร้อมกัน
                                                 = การวาง (paste) → Enter กลายเป็นขึ้นบรรทัดใหม่แทนการส่ง)
   AGENT_START_CMD=hermes                        คำสั่งเปิด Hermes ตอนกด "เริ่ม/รีสตาร์ต session" จากหน้าเว็บ
+  AGENT_SHELL_TARGET=shell                      tmux session ของโหมด 🐚 Shell (bash ธรรมดาของ Ubuntu ใน WSL)
   OLLAMA_URL=http://localhost:11434"""
 import os
 import shutil
@@ -26,6 +27,14 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 DEFAULT_MODELS = ("9arm Gateway=/model --provider 9arm;Coder 30B=/model qwen3-coder:30b --provider ollama-launch;"
                   "Coder 3B=/model qwen2.5-coder:3b --provider ollama-launch;Qwen3.5 2B=/model qwen3.5:2b --provider ollama-launch")
 START_CMD = os.getenv("AGENT_START_CMD", "hermes")
+SHELL_TARGET = os.getenv("AGENT_SHELL_TARGET", "shell")
+# เป้าหมายที่หน้าเว็บเลือกส่งได้: Hermes (AI) หรือ Shell (bash ธรรมดา) — ใช้จอแสดงผลเดียวกัน
+TARGETS = {"hermes": {"tmux": TMUX_TARGET, "start": START_CMD, "label": "🤖 Hermes"},
+           "shell": {"tmux": SHELL_TARGET, "start": "", "label": "🐚 Shell (WSL)"}}
+
+
+def tmux_of(target: str | None) -> str:
+    return TARGETS.get(target or "hermes", TARGETS["hermes"])["tmux"]
 # ปุ่มคีย์ที่หน้าเว็บกดได้ (ชื่อตาม tmux send-keys) — นอกรายการนี้ส่งไม่ได้
 KEYS = {"C-c": "Ctrl+C", "C-d": "Ctrl+D", "C-l": "Ctrl+L", "C-u": "Ctrl+U", "C-r": "Ctrl+R", "C-z": "Ctrl+Z",
         "Escape": "Esc", "Tab": "Tab", "Up": "↑", "Down": "↓", "Enter": "⏎ Enter"}
@@ -54,30 +63,30 @@ def run(args: list[str], timeout: float = 5) -> tuple[int, str]:
 
 
 # ─── tmux ─────────────────────────────────────────────────────
-def send_text(text: str) -> tuple[bool, str]:
+def send_text(text: str, target: str | None = None) -> tuple[bool, str]:
     """พิมพ์ข้อความลง tmux แล้วกด Enter (-l = ส่งตามตัวอักษร ไม่ตีความเป็นคีย์)"""
-    code, out = run(["tmux", "send-keys", "-t", TMUX_TARGET, "-l", text])
+    code, out = run(["tmux", "send-keys", "-t", tmux_of(target), "-l", text])
     if code != 0:
         return False, out.strip() or "ส่งเข้า tmux ไม่ได้"
     time.sleep(float(os.getenv("AGENT_ENTER_DELAY", "0.6")))
-    return press("Enter")
+    return press("Enter", target)
 
 
-def press(key: str) -> tuple[bool, str]:
+def press(key: str, target: str | None = None) -> tuple[bool, str]:
     """กดคีย์พิเศษ 1 ครั้ง (Enter, C-c, …)"""
-    code, out = run(["tmux", "send-keys", "-t", TMUX_TARGET, key])
+    code, out = run(["tmux", "send-keys", "-t", tmux_of(target), key])
     return code == 0, out.strip()
 
 
-def send_command(cmd: str) -> tuple[bool, str]:
+def send_command(cmd: str, target: str | None = None) -> tuple[bool, str]:
     """ค่าใน .env เป็นได้ทั้งคีย์ (C-c) หรือข้อความ (/stop)"""
     if cmd in TMUX_KEYS:
-        return press(cmd)
-    return send_text(cmd)
+        return press(cmd, target)
+    return send_text(cmd, target)
 
 
-def capture(lines: int = 120) -> tuple[bool, str]:
-    code, out = run(["tmux", "capture-pane", "-p", "-J", "-t", TMUX_TARGET, "-S", f"-{lines}"])
+def capture(lines: int = 120, target: str | None = None) -> tuple[bool, str]:
+    code, out = run(["tmux", "capture-pane", "-p", "-J", "-t", tmux_of(target), "-S", f"-{lines}"])
     return code == 0, out.rstrip()
 
 
@@ -192,29 +201,34 @@ def ollama_status() -> dict:
         return {"online": code == 0, "models": parse_ollama_ps(out) if code == 0 else []}
 
 
-def session_name() -> str:
-    return TMUX_TARGET.split(":")[0].split(".")[0]
+def session_name(target: str | None = None) -> str:
+    return tmux_of(target).split(":")[0].split(".")[0]
 
 
-def start_session() -> tuple[bool, str]:
-    """สร้าง tmux session (ทำงานเบื้องหลัง) แล้วเปิด Hermes ข้างใน — มีอยู่แล้วไม่สร้างซ้ำ"""
-    if tmux_alive():
-        return False, f"มี session {session_name()} อยู่แล้ว"
-    code, out = run(["tmux", "new-session", "-d", "-s", session_name(), "-x", "200", "-y", "50"])
+def start_session(target: str | None = None) -> tuple[bool, str]:
+    """สร้าง tmux session (ทำงานเบื้องหลัง, เริ่มที่โฟลเดอร์ home) แล้วเปิดโปรแกรมของเป้าหมายนั้น
+    (Hermes = AGENT_START_CMD, Shell = bash เปล่า) — มีอยู่แล้วไม่สร้างซ้ำ"""
+    name = session_name(target)
+    if tmux_alive(target):
+        return False, f"มี session {name} อยู่แล้ว"
+    code, out = run(["tmux", "new-session", "-d", "-s", name, "-x", "200", "-y", "50", "-c", os.path.expanduser("~")])
     if code != 0:
         return False, out.strip() or ("ไม่พบโปรแกรม tmux — ติดตั้งด้วย sudo apt install -y tmux" if code == 127 else "สร้าง session ไม่ได้")
+    start = TARGETS.get(target or "hermes", TARGETS["hermes"])["start"]
+    if not start:
+        return True, ""
     time.sleep(0.3)
-    return send_text(START_CMD)
+    return send_text(start, target)
 
 
-def restart_session() -> tuple[bool, str]:
+def restart_session(target: str | None = None) -> tuple[bool, str]:
     """ปิด session เดิม (ถ้ามี) แล้วเปิดใหม่"""
-    if tmux_alive():
-        run(["tmux", "kill-session", "-t", session_name()])
+    if tmux_alive(target):
+        run(["tmux", "kill-session", "-t", session_name(target)])
         time.sleep(0.3)
-    return start_session()
+    return start_session(target)
 
 
-def tmux_alive() -> bool:
-    code, _ = run(["tmux", "has-session", "-t", session_name()])
+def tmux_alive(target: str | None = None) -> bool:
+    code, _ = run(["tmux", "has-session", "-t", session_name(target)])
     return code == 0

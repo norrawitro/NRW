@@ -142,3 +142,7 @@
 .ag-group .m-sm,.ag-models .m-sm{padding:3px 8px;font-size:11.5px}
 .ag-key{min-width:36px;font-family:ui-monospace,Menlo,Consolas,monospace}
 @media (max-width:640px){.ag-meters{grid-template-columns:1fr}.ag-cmds button{flex:1}}
+.ag-modes{display:flex;gap:6px;margin:6px 0}
+.ag-modes .m-tab{padding:5px 12px;font-size:12.5px}
+.ag-shell .ag-hermes-only{display:none!important}
+.ag-shell .ag-screen{background:#0a0f0a;color:#c8f7c5}

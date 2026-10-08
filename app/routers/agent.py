@@ -11,7 +11,8 @@ POST /agent/unlock {password} · POST /agent/lock
 GET  /agent/status           CPU/RAM/GPU %, โมเดลใน Ollama (สัดส่วน CPU/GPU), tmux, หน้าจอ terminal
 POST /agent/send {text} · POST /agent/model {id} · POST /agent/stop · POST /agent/reset · POST /agent/enter
 POST /agent/key {key}        กดปุ่มคีย์ (Ctrl+C/D/L/U/R/Z, Esc, Tab, ↑, ↓, Enter) — เฉพาะในรายการ
-POST /agent/session {action: start|restart}   สร้าง/รีสตาร์ต tmux session + เปิด Hermes จากหน้าเว็บ"""
+POST /agent/session {action: start|restart}   สร้าง/รีสตาร์ต tmux session + เปิด Hermes จากหน้าเว็บ
+?target=hermes|shell (status/send/key/stop/enter/session) — 🐚 shell = bash ธรรมดาของ Ubuntu ใน WSL (tmux session แยก)"""
 import hashlib
 import hmac
 import logging
@@ -19,7 +20,7 @@ import os
 import time
 from collections import deque
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -36,6 +37,7 @@ SESSION_MIN = int(os.getenv("AGENT_SESSION_MIN", "120"))
 MAX_FAILS, FAIL_WINDOW = 5, 15 * 60
 _fails: dict[str, list[float]] = {}
 _history: deque = deque(maxlen=50)
+TargetQ = Query("hermes", pattern="^(hermes|shell)$")
 
 
 def password_hash() -> str:
@@ -95,12 +97,12 @@ def _unlocked(request: Request, db: Session) -> User:
     return me
 
 
-def _record(me: User, action: str, detail: str, ok: bool, msg: str = "") -> dict:
-    item = {"time": time.strftime("%H:%M:%S"), "action": action, "detail": detail[:200], "ok": ok, "message": msg[:300]}
+def _record(me: User, action: str, detail: str, ok: bool, msg: str = "", target: str = "hermes") -> dict:
+    item = {"time": time.strftime("%H:%M:%S"), "target": target, "action": action, "detail": detail[:200], "ok": ok, "message": msg[:300]}
     _history.appendleft(item)
     log.info("agent %s by %s: %s (%s)", action, me.username, detail[:200], "ok" if ok else msg)
     if not ok:
-        raise HTTPException(status_code=502, detail=f"ส่งเข้า terminal ไม่สำเร็จ: {msg or 'ไม่พบ tmux session ' + host.TMUX_TARGET}")
+        raise HTTPException(status_code=502, detail=f"ส่งเข้า terminal ไม่สำเร็จ: {msg or 'ไม่พบ tmux session ' + host.tmux_of(target)} — กด ▶️ เริ่ม session")
     return item
 
 
@@ -110,7 +112,8 @@ def state(request: Request, db: Session = Depends(get_db)):
     left = _session_left(request, me) if password_hash() else 0
     return {"enabled": bool(password_hash()), "unlocked": left > 0, "expires_in": left,
             "target": host.TMUX_TARGET, "models": host.models(), "stop": host.STOP_CMD, "reset": host.RESET_CMD,
-            "keys": [{"key": k, "label": v} for k, v in host.KEYS.items()], "start_cmd": host.START_CMD}
+            "keys": [{"key": k, "label": v} for k, v in host.KEYS.items()], "start_cmd": host.START_CMD,
+            "targets": [{"id": k, "label": v["label"], "tmux": v["tmux"]} for k, v in host.TARGETS.items()]}
 
 
 class UnlockIn(BaseModel):
@@ -148,14 +151,14 @@ def lock(request: Request, response: Response, db: Session = Depends(get_db)):
 
 
 @router.get("/status")
-def status(request: Request, lines: int = 120, db: Session = Depends(get_db)):
+def status(request: Request, lines: int = 120, target: str = TargetQ, db: Session = Depends(get_db)):
     _unlocked(request, db)
-    alive = host.tmux_alive()
-    ok, screen = host.capture(max(20, min(lines, 400))) if alive else (False, "")
+    alive = host.tmux_alive(target)
+    ok, screen = host.capture(max(20, min(lines, 400)), target) if alive else (False, "")
     gpus = host.gpu_status()
     return {"time": time.strftime("%H:%M:%S"), "cpu": host.cpu_percent(), "mem": host.mem_percent(),
             "gpus": gpus, "gpu": gpus[0]["util"] if gpus else None, "ollama": host.ollama_status(),
-            "tmux": {"target": host.TMUX_TARGET, "alive": alive}, "screen": screen if ok else "",
+            "tmux": {"target": host.tmux_of(target), "alive": alive, "mode": target}, "screen": screen if ok else "",
             "history": list(_history)[:15], "expires_in": _session_left(request, _owner(request, db))}
 
 
@@ -164,13 +167,22 @@ class SendIn(BaseModel):
 
 
 @router.post("/send")
-def send(body: SendIn, request: Request, db: Session = Depends(get_db)):
+def send(body: SendIn, request: Request, target: str = TargetQ, db: Session = Depends(get_db)):
     me = _unlocked(request, db)
-    text = " ".join(body.text.replace("\r", "\n").split("\n")).strip()   # หลายบรรทัด → บรรทัดเดียว (Enter กลางข้อความ = ส่งก่อนเวลา)
-    if not text:
+    lines = [l.strip() for l in body.text.replace("\r", "\n").split("\n") if l.strip()]
+    if not lines:
         raise HTTPException(status_code=400, detail="ข้อความว่าง")
-    ok, msg = host.send_text(text)
-    return _record(me, "send", text, ok, msg)
+    if target == "shell":        # shell: หลายบรรทัด = รันทีละคำสั่ง (สูงสุด 20)
+        if len(lines) > 20:
+            raise HTTPException(status_code=400, detail="ส่งได้ครั้งละไม่เกิน 20 คำสั่ง")
+        for line in lines:
+            ok, msg = host.send_text(line, target)
+            if not ok:
+                break
+        return _record(me, "send", " ⏎ ".join(lines), ok, msg, target)
+    text = " ".join(lines)       # Hermes: หลายบรรทัด → บรรทัดเดียว (Enter กลางข้อความ = ส่งก่อนเวลา)
+    ok, msg = host.send_text(text, target)
+    return _record(me, "send", text, ok, msg, target)
 
 
 class ModelIn(BaseModel):
@@ -188,18 +200,19 @@ def choose_model(body: ModelIn, request: Request, db: Session = Depends(get_db))
 
 
 @router.post("/stop")
-def stop(request: Request, db: Session = Depends(get_db)):
+def stop(request: Request, target: str = TargetQ, db: Session = Depends(get_db)):
     me = _unlocked(request, db)
-    ok, msg = host.send_command(host.STOP_CMD)
-    return _record(me, "stop", host.STOP_CMD, ok, msg)
+    cmd = host.STOP_CMD if target == "hermes" else "C-c"      # shell: Ctrl+C หยุดคำสั่งที่รันอยู่
+    ok, msg = host.send_command(cmd, target)
+    return _record(me, "stop", cmd, ok, msg, target)
 
 
 @router.post("/enter")
-def enter(request: Request, db: Session = Depends(get_db)):
-    """กด Enter อย่างเดียว — ส่งข้อความที่ค้างอยู่ในช่องพิมพ์ของ Hermes"""
+def enter(request: Request, target: str = TargetQ, db: Session = Depends(get_db)):
+    """กด Enter อย่างเดียว — ส่งข้อความที่ค้างอยู่ในช่องพิมพ์"""
     me = _unlocked(request, db)
-    ok, msg = host.press("Enter")
-    return _record(me, "enter", "⏎", ok, msg)
+    ok, msg = host.press("Enter", target)
+    return _record(me, "enter", "⏎", ok, msg, target)
 
 
 class KeyIn(BaseModel):
@@ -207,12 +220,12 @@ class KeyIn(BaseModel):
 
 
 @router.post("/key")
-def key(body: KeyIn, request: Request, db: Session = Depends(get_db)):
+def key(body: KeyIn, request: Request, target: str = TargetQ, db: Session = Depends(get_db)):
     me = _unlocked(request, db)
     if body.key not in host.KEYS:
         raise HTTPException(status_code=400, detail="ปุ่มนี้ไม่อยู่ในรายการที่อนุญาต")
-    ok, msg = host.press(body.key)
-    return _record(me, "key", host.KEYS[body.key], ok, msg)
+    ok, msg = host.press(body.key, target)
+    return _record(me, "key", host.KEYS[body.key], ok, msg, target)
 
 
 class SessionIn(BaseModel):
@@ -220,12 +233,12 @@ class SessionIn(BaseModel):
 
 
 @router.post("/session")
-def session(body: SessionIn, request: Request, db: Session = Depends(get_db)):
+def session(body: SessionIn, request: Request, target: str = TargetQ, db: Session = Depends(get_db)):
     me = _unlocked(request, db)
-    if body.action == "start" and host.tmux_alive():
-        raise HTTPException(status_code=400, detail=f"มี session {host.session_name()} ทำงานอยู่แล้ว — ใช้รีสตาร์ตแทน")
-    ok, msg = host.start_session() if body.action == "start" else host.restart_session()
-    return _record(me, body.action, f"tmux {host.session_name()} → {host.START_CMD}", ok, msg)
+    if body.action == "start" and host.tmux_alive(target):
+        raise HTTPException(status_code=400, detail=f"มี session {host.session_name(target)} ทำงานอยู่แล้ว — ใช้รีสตาร์ตแทน")
+    ok, msg = host.start_session(target) if body.action == "start" else host.restart_session(target)
+    return _record(me, body.action, f"tmux {host.session_name(target)} → {host.TARGETS[target]['start'] or 'bash'}", ok, msg, target)
 
 
 @router.post("/reset")
