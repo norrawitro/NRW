@@ -55,6 +55,7 @@ const AgentUI = {
       <div class="ag-cmds"><button class="btn-ghost" id="agQueue" title="ใส่ /queue ลงช่องพิมพ์ (ยังไม่ส่ง)">📥 Queue</button>
         <button class="btn-ghost ag-stop" id="agStop" title="${esc(s.stop==='C-c'?'กด Ctrl+C':'ส่ง '+s.stop)}">⏹ Stop</button>
         <button class="btn-ghost" id="agReset" title="ส่ง ${esc(s.reset)}">🔄 Reset</button>
+        <button class="btn-ghost" id="agEnter" title="กด Enter ใน Hermes (ส่งข้อความที่ค้างอยู่ในช่องพิมพ์)">⏎ Enter</button>
         <button class="btn-primary" id="agSend">ส่ง ➤</button></div>
       <details class="ag-hist"><summary>ประวัติคำสั่ง</summary><div id="agHist"></div></details></div>`;
     const t = document.getElementById('agText');
@@ -69,6 +70,7 @@ const AgentUI = {
     if(e.target.id==='agStop') return this.act('/agent/stop', {}, 'ส่ง Stop แล้ว');
     if(e.target.id==='agReset' && confirm('Reset บทสนทนาของ Agent?')) return this.act('/agent/reset', {}, 'ส่ง Reset แล้ว');
     if(e.target.id==='agSend') return this.send();
+    if(e.target.id==='agEnter') return this.act('/agent/enter', {}, 'กด Enter แล้ว');
     if(e.target.id==='agLock'){ await this.call('/agent/lock', {}); this.drawLock(); }
   },
   async send(){

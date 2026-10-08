@@ -7,6 +7,8 @@
                                                 ปุ่มเลือกโมเดล: ชื่อปุ่ม=ข้อความที่ส่ง คั่นด้วย ;
   AGENT_STOP=C-c                                ปุ่ม Stop: C-c = กด Ctrl+C, หรือใส่ข้อความ เช่น /stop
   AGENT_RESET=/new                              ปุ่ม Reset: ข้อความที่ส่ง (เช่น /new หรือ /reset)
+  AGENT_ENTER_DELAY=0.6                         รอกี่วินาทีหลังพิมพ์ก่อนกด Enter (Hermes มองว่าข้อความ+Enter ที่มาพร้อมกัน
+                                                = การวาง (paste) → Enter กลายเป็นขึ้นบรรทัดใหม่แทนการส่ง)
   OLLAMA_URL=http://localhost:11434"""
 import os
 import shutil
@@ -50,15 +52,20 @@ def send_text(text: str) -> tuple[bool, str]:
     code, out = run(["tmux", "send-keys", "-t", TMUX_TARGET, "-l", text])
     if code != 0:
         return False, out.strip() or "ส่งเข้า tmux ไม่ได้"
-    code, out = run(["tmux", "send-keys", "-t", TMUX_TARGET, "Enter"])
+    time.sleep(float(os.getenv("AGENT_ENTER_DELAY", "0.6")))
+    return press("Enter")
+
+
+def press(key: str) -> tuple[bool, str]:
+    """กดคีย์พิเศษ 1 ครั้ง (Enter, C-c, …)"""
+    code, out = run(["tmux", "send-keys", "-t", TMUX_TARGET, key])
     return code == 0, out.strip()
 
 
 def send_command(cmd: str) -> tuple[bool, str]:
     """ค่าใน .env เป็นได้ทั้งคีย์ (C-c) หรือข้อความ (/stop)"""
     if cmd in TMUX_KEYS:
-        code, out = run(["tmux", "send-keys", "-t", TMUX_TARGET, cmd])
-        return code == 0, out.strip()
+        return press(cmd)
     return send_text(cmd)
 
 

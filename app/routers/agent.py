@@ -9,7 +9,7 @@
 GET  /agent/state            เปิดใช้/ปลดล็อกแล้วหรือยัง + ปุ่มโมเดล
 POST /agent/unlock {password} · POST /agent/lock
 GET  /agent/status           CPU/RAM/GPU %, โมเดลใน Ollama (สัดส่วน CPU/GPU), tmux, หน้าจอ terminal
-POST /agent/send {text} · POST /agent/model {id} · POST /agent/stop · POST /agent/reset"""
+POST /agent/send {text} · POST /agent/model {id} · POST /agent/stop · POST /agent/reset · POST /agent/enter"""
 import hashlib
 import hmac
 import logging
@@ -189,6 +189,14 @@ def stop(request: Request, db: Session = Depends(get_db)):
     me = _unlocked(request, db)
     ok, msg = host.send_command(host.STOP_CMD)
     return _record(me, "stop", host.STOP_CMD, ok, msg)
+
+
+@router.post("/enter")
+def enter(request: Request, db: Session = Depends(get_db)):
+    """กด Enter อย่างเดียว — ส่งข้อความที่ค้างอยู่ในช่องพิมพ์ของ Hermes"""
+    me = _unlocked(request, db)
+    ok, msg = host.press("Enter")
+    return _record(me, "enter", "⏎", ok, msg)
 
 
 @router.post("/reset")

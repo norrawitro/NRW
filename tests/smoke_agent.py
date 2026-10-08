@@ -7,7 +7,8 @@ import os, sys, tempfile
 db_file = tempfile.mktemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{db_file}"
 os.environ.setdefault("SECRET_KEY", "test")
-os.environ["OLLAMA_URL"] = "http://127.0.0.1:9"          # ปิดไว้ → ใช้ `ollama ps` (ปลอม)
+os.environ["OLLAMA_URL"] = "http://127.0.0.1:9"
+os.environ["AGENT_ENTER_DELAY"] = "0.05"          # ปิดไว้ → ใช้ `ollama ps` (ปลอม)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient
@@ -76,6 +77,10 @@ calls.clear()
 boss.post("/agent/send", json={"text": "/queue สร้างหน้า login\nแล้วทดสอบ; rm -rf /"}, headers=H)
 check("ส่ง: tmux send-keys -l ข้อความตามตัวอักษร (ไม่ผ่าน shell) + Enter",
       calls[0] == ["tmux", "send-keys", "-t", "hermes", "-l", "/queue สร้างหน้า login แล้วทดสอบ; rm -rf /"] and calls[1] == ["tmux", "send-keys", "-t", "hermes", "Enter"])
+calls.clear(); boss.post("/agent/enter", headers=H)
+check("ปุ่ม Enter = กด Enter อย่างเดียว", calls == [["tmux", "send-keys", "-t", "hermes", "Enter"]])
+import time as _t; _t0 = _t.time(); os.environ["AGENT_ENTER_DELAY"] = "0.3"; boss.post("/agent/send", json={"text": "x"}, headers=H)
+check("รอก่อนกด Enter (กัน Hermes มองเป็นการวาง)", _t.time() - _t0 >= 0.3); os.environ["AGENT_ENTER_DELAY"] = "0.05"
 calls.clear(); boss.post("/agent/model", json={"id": 1}, headers=H)
 check("ปุ่มโมเดล Coder 30B → ส่ง /model qwen3-coder:30b", calls[0][-1] == "/model qwen3-coder:30b")
 check("โมเดลที่ไม่มี → 404", boss.post("/agent/model", json={"id": 9}, headers=H).status_code == 404)
