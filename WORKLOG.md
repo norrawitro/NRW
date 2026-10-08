@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-10-08 — 🛠️ AI Agent ในศูนย์ AI (เฉพาะเจ้าของ) (Claude, branch `claude/ai-agent`)
+
+ตามคำขอ: เพิ่ม AI Agent ในหน้า AI ต้องใช้รหัสผ่าน เจ้าของเข้าได้คนเดียว ลูกค้าเข้าไม่ได้
+- **ความปลอดภัย** (ส่วนนี้สั่งงานเครื่องจริง): ต้องเป็นผู้ดูแล (หรือเฉพาะ `AGENT_OWNER`) + รหัสผ่าน Agent แยก
+  (เก็บเป็น hash PBKDF2 ใน .env), ผิด 5 ครั้ง = ล็อก 15 นาที, ปลดล็อกอยู่ได้ 120 นาที, cookie httponly + SameSite=strict,
+  POST ต้องมี header เฉพาะ, ส่งเข้า tmux แบบไม่ผ่าน shell, เปลี่ยนรหัส = session เก่าใช้ไม่ได้, บันทึก log ทุกคำสั่ง
+- **ปุ่มโมเดล 3 ปุ่ม**: 9arm Gateway / Coder 30B / Coder 3B → ส่ง `/model <ชื่อ>` (แก้ชื่อได้ใน `AGENT_MODELS`)
+- **สถานะค้างบนจอ อัปเดตทุก 2.5 วินาที**: CPU %, RAM %, GPU % + VRAM + อุณหภูมิ (nvidia-smi),
+  โมเดลที่โหลดใน Ollama พร้อมสัดส่วน CPU/GPU (API /api/ps หรือ `ollama ps`), tmux ทำงานอยู่ไหม, หน้าจอ terminal สด
+- **ปุ่มคำสั่ง**: 📥 Queue (ใส่ `/queue ` ในช่องพิมพ์ ยังไม่ส่ง), ⏹ Stop (Ctrl+C), 🔄 Reset (`/new`), ส่ง ➤ (Enter)
+- ไฟล์: `app/routers/agent.py`, `app/services/agent_host.py`, `app/static/js/agent.js`, `set_agent_password.py`
+
+### ทดสอบ
+- `tests/smoke_agent.py` 24 ข้อ (สิทธิ์, รหัสผ่าน/ล็อก, คำสั่ง tmux ที่ส่งจริง, แปลงผล ollama ps / nvidia-smi)
+- ทดสอบกับ tmux จริง + Hermes จำลอง ผ่านเบราว์เซอร์: เปลี่ยนโมเดล, Queue, ส่งภาษาไทย, Ctrl+C, /new — ขึ้นบนจอครบ
+
+---
+
 ## 2026-10-04 — จัดการสต็อกสินค้า + พนักงาน/ตารางงาน/เงินเดือน (Claude, branch `claude/stock-hr`)
 
 ### 1. ฟังก์ชันจัดการสต็อกสินค้า (คลังสินค้า/ขนส่ง → 🏬 สต็อกสินค้า, หรือ ร้านของฉัน → จัดการสต็อก)

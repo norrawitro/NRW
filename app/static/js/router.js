@@ -17,7 +17,7 @@ function showView(view, anchor){
   if(view==='news'){ renderNewsComposerCats(); renderNewsFilters(); renderNewsFeed(); }
   if(view==='cloud'){ fetchCloud().then(()=>{ renderStorage(); renderBreadcrumb(); renderFileGrid(); }); }
   if(view==='wallet'){ fetchWallet().then(()=>{ renderWallet(); updateWalletChips(); }); }
-  if(view==='ai'){ renderAIQuick(); renderAIMessages(); }
+  if(view==='ai'){ renderAIQuick(); renderAIMessages(); if(typeof AgentUI!=='undefined') AgentUI.mount(); }
   if(view==='home'){ renderHomeFeed(); if(typeof loadHomeAd==='function') loadHomeAd(); }
 }
 

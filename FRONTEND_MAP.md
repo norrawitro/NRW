@@ -109,3 +109,9 @@
 - `modules/hr.js` — แท็บ + พนักงาน + งานของฉัน · `modules/hr_schedule.js` (`HrSchedule`) ตารางกะรายสัปดาห์
 - `modules/hr_payroll.js` (`HrPayroll`) — สรุปเงินเดือน, สลิป, รายการบวก/หัก, จ่าย, พิมพ์, CSV
 - สูตรคำนวณอยู่ที่เดียว: `app/services/payroll.py` (OT เกิน 8 ชม./วัน, ประกันสังคม 5% สูงสุด 750)
+
+## 🛠️ AI Agent (ศูนย์ AI — เฉพาะเจ้าของ)
+- `agent.js` (`AgentUI`) — ต่อท้ายหน้าศูนย์ AI เมื่อเป็นผู้ดูแล; ลูกค้าไม่เห็นเลย (API ตอบ 403)
+- ล็อกด้วยรหัสผ่านแยก (`set_agent_password.py`), สถานะ CPU/RAM/GPU/Ollama ติดบนจอ อัปเดตทุก 2.5 วินาที
+- ปุ่มโมเดล / Queue / Stop / Reset / ส่ง → `app/routers/agent.py` → `app/services/agent_host.py` (tmux send-keys)
+- ตั้งชื่อ tmux session, คำสั่งโมเดล, Stop, Reset ได้ใน `.env` (ดู `.env.example`)
