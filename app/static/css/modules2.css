@@ -112,28 +112,33 @@
 .hr-net{font-size:18px;border-top:2px solid var(--line);padding-top:10px;margin:10px 0}
 .hr-adj{background:var(--surface-2);border-radius:10px;padding:10px;margin:10px 0}
 @media print{body *{visibility:hidden}.hr-slip,.hr-slip *{visibility:visible}.hr-slip{position:absolute;left:0;top:0;width:100%}.hr-slip button,.hr-slip .hr-adj{display:none}}
-/* AI Agent (agent.js) — เฉพาะเจ้าของ */
-#agentBox{margin-top:16px}
-.ag-card h3 code,.ag-tmux code{font-size:12px;background:var(--surface-2);padding:1px 6px;border-radius:6px}
-.ag-lock{max-width:520px}
-.ag-err{color:#e5484d;font-size:13px;margin-top:6px}
-.ag-status{position:sticky;top:64px;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;display:grid;gap:8px}
-.ag-meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 16px}
-.ag-meter{display:grid;grid-template-columns:40px 1fr 44px;align-items:center;gap:8px;font-size:13px}
-.ag-meter small{grid-column:1/-1;margin-top:-4px}
-.ag-track{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+/* AI Agent (agent.js) — เฉพาะเจ้าของ · กะทัดรัด */
+.ai-tabs{margin-bottom:10px}
+#agentBox{margin-top:0}
+#agentBox .ag-card{padding:12px}
+.ag-card h3{font-size:14px;margin:0}
+.ag-card h3 code,.ag-tmux code{font-size:11px;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.ag-lock{max-width:460px}
+.ag-err{color:#e5484d;font-size:12px;margin-top:6px}
+.ag-status{background:var(--surface-2);border-radius:10px;padding:6px 10px;margin:6px 0;display:grid;gap:4px;font-size:12px}
+.ag-meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 12px}
+.ag-meter{display:grid;grid-template-columns:30px 1fr 34px;align-items:center;gap:6px;font-size:11.5px}
+.ag-meter small{grid-column:1/-1;margin-top:-3px;font-size:10.5px}
+.ag-track{height:6px;border-radius:999px;background:var(--surface);overflow:hidden}
 .ag-track i{display:block;height:100%;transition:width .6s}
-.ag-ollama{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:13px}
-.ag-model{min-width:200px}
-.ag-split{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--surface-2);margin:3px 0}
+.ag-ollama{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:11.5px}
+.ag-model{min-width:170px}
+.ag-split{display:flex;height:6px;border-radius:999px;overflow:hidden;background:var(--surface);margin:2px 0}
 .ag-split .cpu{background:#f59e0b}.ag-split .gpu{background:#6366f1}
-.ag-tmux{font-size:13px}
-.ag-models{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
-.ag-screen{background:#0b1020;color:#d1e7ff;font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;border-radius:10px;padding:12px;height:min(46vh,420px);overflow:auto;white-space:pre-wrap;word-break:break-word;margin:8px 0}
-.ag-text{width:100%;resize:vertical;font-family:inherit}
-.ag-cmds{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px}
+.ag-tmux{font-size:11.5px}
+.ag-models{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:4px 0}
+.ag-screen{background:#0b1020;color:#d1e7ff;font:11.5px/1.4 ui-monospace,Menlo,Consolas,monospace;border-radius:8px;padding:8px 10px;height:min(38vh,320px);overflow:auto;white-space:pre-wrap;word-break:break-word;margin:6px 0}
+.ag-text{width:100%;resize:vertical;font-family:inherit;font-size:13px;min-height:38px}
+.ag-cmds{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}
+.ag-cmds button{padding:6px 12px;font-size:13px}
 .ag-stop{color:#e5484d}
-.ag-hist{margin-top:10px;font-size:13px}
-@media (max-width:640px){.ag-status{top:56px}.ag-cmds button{flex:1}}
-.ag-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
-.ag-key{min-width:44px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.ag-hist{margin-top:6px;font-size:12px}
+.ag-group{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px}
+.ag-group .m-sm,.ag-models .m-sm{padding:3px 8px;font-size:11.5px}
+.ag-key{min-width:36px;font-family:ui-monospace,Menlo,Consolas,monospace}
+@media (max-width:640px){.ag-meters{grid-template-columns:1fr}.ag-cmds button{flex:1}}

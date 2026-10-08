@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-10-08 — AI Agent: หน้าจอกะทัดรัด + แก้ปุ่มโมเดล (--provider) (Claude, branch `claude/agent-compact`)
+
+- หน้าศูนย์ AI ของเจ้าของแยกเป็น 2 แท็บ: 💬 ผู้ช่วย AI | 🛠️ AI Agent (จำแท็บล่าสุด) — Agent ไม่ต้องเลื่อนผ่านกล่องแชทใหญ่อีก
+- ย่อขนาด: แถบสถานะ/ปุ่ม/ตัวอักษรเล็กลง, จอ terminal สูงไม่เกิน 38% ของจอ → ทั้งแผงอยู่ในหน้าจอเดียว
+- ปุ่มโมเดล: Hermes แจ้ง "declared by multiple configured providers" → ค่าเริ่มต้นเปลี่ยนเป็น
+  `/model <ชื่อ> --provider ollama-launch` (provider ที่ Hermes ใช้ได้จริงในเครื่อง)
+- ลูกค้ายังเห็นแค่แชท AI ปกติ (ไม่มีแท็บ, ไม่มีแผง Agent)
+
+---
+
 ## 2026-10-08 — AI Agent: กลุ่มปุ่ม Session (New) + ปุ่มคีย์ Ctrl (Claude, branch `claude/agent-keys`)
 
 - 🆕 Session: ▶️ เริ่ม session ใหม่ (tmux new -d -s hermes + เปิด Hermes) · 🔁 รีสตาร์ต Hermes · 💬 บทสนทนาใหม่ (/new)

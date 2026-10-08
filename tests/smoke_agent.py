@@ -72,7 +72,7 @@ print("── รหัสผ่าน ──")
 check("รหัสผิด → 401 บอกจำนวนครั้งที่เหลือ", "เหลือ 4" in boss.post("/agent/unlock", json={"password": "wrong"}).json()["detail"])
 r = boss.post("/agent/unlock", json={"password": "correct-horse-42"})
 check("รหัสถูก → ปลดล็อก + cookie httponly", r.status_code == 200 and "httponly" in r.headers["set-cookie"].lower() and "samesite=strict" in r.headers["set-cookie"].lower())
-check("สถานะ: ปลดล็อกแล้ว + ปุ่มโมเดล 3 ปุ่ม", boss.get("/agent/state").json()["unlocked"] is True and len(boss.get("/agent/state").json()["models"]) == 3)
+check("สถานะ: ปลดล็อกแล้ว + ปุ่มโมเดล 4 ปุ่ม", boss.get("/agent/state").json()["unlocked"] is True and len(boss.get("/agent/state").json()["models"]) == 4)
 for _ in range(5):
     admin2.post("/agent/unlock", json={"password": "nope"})
 check("ผิด 5 ครั้ง → ล็อก 15 นาที (แม้รหัสถูก)", admin2.post("/agent/unlock", json={"password": "correct-horse-42"}).status_code == 429)
@@ -89,7 +89,7 @@ check("ปุ่ม Enter = กด Enter อย่างเดียว", calls 
 import time as _t; _t0 = _t.time(); os.environ["AGENT_ENTER_DELAY"] = "0.3"; boss.post("/agent/send", json={"text": "x"}, headers=H)
 check("รอก่อนกด Enter (กัน Hermes มองเป็นการวาง)", _t.time() - _t0 >= 0.3); os.environ["AGENT_ENTER_DELAY"] = "0.05"
 calls.clear(); boss.post("/agent/model", json={"id": 1}, headers=H)
-check("ปุ่มโมเดล Coder 30B → ส่ง /model qwen3-coder:30b", calls[0][-1] == "/model qwen3-coder:30b")
+check("ปุ่มโมเดล Coder 30B → ส่ง /model qwen3-coder:30b --provider ollama-launch", calls[0][-1] == "/model qwen3-coder:30b --provider ollama-launch")
 check("โมเดลที่ไม่มี → 404", boss.post("/agent/model", json={"id": 9}, headers=H).status_code == 404)
 calls.clear(); boss.post("/agent/stop", headers=H)
 check("Stop = กด Ctrl+C", calls == [["tmux", "send-keys", "-t", "hermes", "C-c"]])

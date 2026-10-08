@@ -18,12 +18,34 @@ const AgentUI = {
   async mount(){
     this.stopPoll();
     const old = document.getElementById('agentBox');
-    if(!(State.me && State.me.is_admin)){ if(old) old.remove(); return; }
+    if(!(State.me && State.me.is_admin)){ if(old) old.remove(); this.tabs(false); return; }
     const r = await this.call('/agent/state');
-    if(!r.ok){ if(old) old.remove(); return; }           // ไม่ใช่เจ้าของ → ไม่แสดงอะไรเลย
+    if(!r.ok){ if(old) old.remove(); this.tabs(false); return; }           // ไม่ใช่เจ้าของ → ไม่แสดงอะไรเลย
     this.state = r.data;
+    this.tabs(true);
     if(!r.data.enabled) return this.drawDisabled();
     return r.data.unlocked ? this.drawPanel() : this.drawLock();
+  },
+  /** เจ้าของ: แท็บ 💬 ผู้ช่วย AI | 🛠️ AI Agent — แสดงทีละส่วน (จำแท็บที่เลือกไว้) */
+  tabs(show){
+    const view = document.getElementById('view-ai'), panel = view.querySelector('.ai-panel');
+    let bar = document.getElementById('aiTabs');
+    if(!show){ if(bar) bar.remove(); panel.classList.remove('hidden'); return; }
+    if(!bar){
+      bar = document.createElement('div'); bar.id = 'aiTabs'; bar.className = 'm-tabs ai-tabs';
+      bar.innerHTML = '<button class="m-tab" data-aitab="chat">💬 ผู้ช่วย AI</button><button class="m-tab" data-aitab="agent">🛠️ AI Agent</button>';
+      panel.before(bar);
+      bar.onclick = e=>{ const t = e.target.closest('[data-aitab]'); if(t) this.select(t.dataset.aitab); };
+    }
+    let tab = 'agent'; try{ tab = localStorage.getItem('wkw_ai_tab') || 'agent'; }catch(e){}
+    this.select(tab, true);
+  },
+  select(tab, quiet){
+    try{ localStorage.setItem('wkw_ai_tab', tab); }catch(e){}
+    document.querySelectorAll('[data-aitab]').forEach(b=>b.classList.toggle('on', b.dataset.aitab===tab));
+    document.querySelector('#view-ai .ai-panel').classList.toggle('hidden', tab!=='chat');
+    this.box().classList.toggle('hidden', tab!=='agent');
+    if(tab==='agent' && !quiet && !this.timer && document.getElementById('agStatus')){ this.poll(); this.timer = setInterval(()=>this.poll(), 2500); }
   },
   drawDisabled(){
     this.box().innerHTML = `<div class="m-card ag-card"><h3>🛠️ AI Agent <small class="m-muted">(เฉพาะเจ้าของ)</small></h3>
@@ -100,7 +122,7 @@ const AgentUI = {
   },
   async poll(){
     if(State.view!=='ai' || !document.getElementById('agStatus')){ this.stopPoll(); return; }
-    if(document.hidden) return;
+    if(document.hidden || this.box().classList.contains('hidden')) return;
     const r = await this.call('/agent/status');
     if(r.status===401) return this.drawLock('หมดเวลา — ใส่รหัสผ่านอีกครั้ง');
     if(!r.ok) return;

@@ -3,7 +3,7 @@
 ทุกคำสั่งเรียกผ่าน run() แบบ list (ไม่ผ่าน shell → กันการแทรกคำสั่ง) และทดสอบได้โดยแทน run()
 ตั้งค่าใน .env (ไม่ตั้ง = ใช้ค่าเริ่มต้นด้านล่าง):
   AGENT_TMUX_TARGET=hermes                      ชื่อ session (หรือ session:window.pane) ของ tmux ที่รัน Hermes
-  AGENT_MODELS=9arm Gateway=/model 9arm;Coder 30B=/model qwen3-coder:30b;Coder 3B=/model qwen2.5-coder:3b
+  AGENT_MODELS=Coder 3B=/model qwen2.5-coder:3b --provider ollama-launch;...
                                                 ปุ่มเลือกโมเดล: ชื่อปุ่ม=ข้อความที่ส่ง คั่นด้วย ;
   AGENT_STOP=C-c                                ปุ่ม Stop: C-c = กด Ctrl+C, หรือใส่ข้อความ เช่น /stop
   AGENT_RESET=/new                              ปุ่ม Reset: ข้อความที่ส่ง (เช่น /new หรือ /reset)
@@ -22,7 +22,9 @@ TMUX_TARGET = os.getenv("AGENT_TMUX_TARGET", "hermes")
 STOP_CMD = os.getenv("AGENT_STOP", "C-c")
 RESET_CMD = os.getenv("AGENT_RESET", "/new")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-DEFAULT_MODELS = "9arm Gateway=/model 9arm;Coder 30B=/model qwen3-coder:30b;Coder 3B=/model qwen2.5-coder:3b"
+# Hermes: โมเดลชื่อเดียวกันอยู่หลาย provider ต้องระบุ --provider (ไม่งั้นขึ้น "declared by multiple configured providers")
+DEFAULT_MODELS = ("9arm Gateway=/model --provider 9arm;Coder 30B=/model qwen3-coder:30b --provider ollama-launch;"
+                  "Coder 3B=/model qwen2.5-coder:3b --provider ollama-launch;Qwen3.5 2B=/model qwen3.5:2b --provider ollama-launch")
 START_CMD = os.getenv("AGENT_START_CMD", "hermes")
 # ปุ่มคีย์ที่หน้าเว็บกดได้ (ชื่อตาม tmux send-keys) — นอกรายการนี้ส่งไม่ได้
 KEYS = {"C-c": "Ctrl+C", "C-d": "Ctrl+D", "C-l": "Ctrl+L", "C-u": "Ctrl+U", "C-r": "Ctrl+R", "C-z": "Ctrl+Z",
