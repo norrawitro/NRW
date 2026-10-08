@@ -35,7 +35,7 @@
 
 /* ============ AI VIEW ============ */
 .ai-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
-  display:flex;flex-direction:column;height:calc(100vh - 220px);min-height:420px;}
+  display:flex;flex-direction:column;height:min(calc(100vh - 220px),520px);min-height:320px;}
 .ai-messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;}
 .msg{max-width:72%;padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.5;}
 .msg.ai{align-self:flex-start;background:var(--surface-2);border-bottom-left-radius:4px;}

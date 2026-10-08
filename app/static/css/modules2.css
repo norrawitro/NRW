@@ -132,7 +132,7 @@
 .ag-split .cpu{background:#f59e0b}.ag-split .gpu{background:#6366f1}
 .ag-tmux{font-size:11.5px}
 .ag-models{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:4px 0}
-.ag-screen{background:#0b1020;color:#d1e7ff;font:11.5px/1.4 ui-monospace,Menlo,Consolas,monospace;border-radius:8px;padding:8px 10px;height:min(38vh,320px);overflow:auto;white-space:pre-wrap;word-break:break-word;margin:6px 0}
+.ag-screen{background:#0b1020;color:#d1e7ff;font:11.5px/1.4 ui-monospace,Menlo,Consolas,monospace;border-radius:8px;padding:8px 10px;height:min(32vh,300px);overflow:auto;white-space:pre-wrap;word-break:break-word;margin:6px 0}
 .ag-text{width:100%;resize:vertical;font-family:inherit;font-size:13px;min-height:38px}
 .ag-cmds{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}
 .ag-cmds button{padding:6px 12px;font-size:13px}
