@@ -19,12 +19,19 @@ from app.routers import agent as agent_mod
 from app.services import agent_host as host
 
 calls = []
+tmux = {"alive": True}
 OLLAMA_PS = """NAME                 ID              SIZE      PROCESSOR          UNTIL
 qwen3-coder:30b      abc123def456    21 GB     48%/52% CPU/GPU    4 minutes from now
 qwen2.5-coder:3b     0123456789ab    2.4 GB    100% GPU           Forever
 """
 def fake_run(args, timeout=5):
     calls.append(args)
+    if args[:2] == ["tmux", "has-session"]:
+        return (0 if tmux["alive"] else 1), ""
+    if args[:2] == ["tmux", "new-session"]:
+        tmux["alive"] = True; return 0, ""
+    if args[:2] == ["tmux", "kill-session"]:
+        tmux["alive"] = False; return 0, ""
     if args[:2] == ["tmux", "capture-pane"]:
         return 0, "hermes> สวัสดี\nพร้อมทำงาน\n"
     if args[:2] == ["ollama", "ps"]:
@@ -91,6 +98,20 @@ check("Reset = ส่ง /new + Enter", calls[0][-1] == "/new" and calls[1][-1] 
 os.environ["AGENT_MODELS"] = "Gateway=/model gw-x;Local=/model foo:1b"
 check("ตั้งปุ่มโมเดลเองผ่าน .env ได้", [m["label"] for m in boss.get("/agent/state").json()["models"]] == ["Gateway", "Local"])
 
+print("── ปุ่มคีย์ + session ──")
+calls.clear(); boss.post("/agent/key", json={"key": "C-l"}, headers=H)
+check("ปุ่ม Ctrl+L → tmux send-keys C-l", calls == [["tmux", "send-keys", "-t", "hermes", "C-l"]])
+check("คีย์นอกรายการ → 400", boss.post("/agent/key", json={"key": "C-x"}, headers=H).status_code == 400
+      and boss.post("/agent/key", json={"key": "a;rm"}, headers=H).status_code == 400)
+check("มี session อยู่แล้ว กดเริ่มใหม่ → 400", boss.post("/agent/session", json={"action": "start"}, headers=H).status_code == 400)
+tmux["alive"] = False; calls.clear()
+r = boss.post("/agent/session", json={"action": "start"}, headers=H)
+check("ไม่มี session → สร้าง tmux -d แล้วพิมพ์ hermes + Enter", r.status_code == 200
+      and any(c[:5] == ["tmux", "new-session", "-d", "-s", "hermes"] for c in calls) and ["tmux", "send-keys", "-t", "hermes", "-l", "hermes"] in calls)
+calls.clear(); boss.post("/agent/session", json={"action": "restart"}, headers=H)
+check("รีสตาร์ต = kill-session แล้วสร้างใหม่", ["tmux", "kill-session", "-t", "hermes"] in calls and any(c[:2] == ["tmux", "new-session"] for c in calls))
+check("state มีรายการปุ่มคีย์", "C-c" in [k["key"] for k in boss.get("/agent/state").json()["keys"]])
+
 print("── สถานะ ──")
 st = boss.get("/agent/status").json()
 check("CPU/RAM เป็น %", isinstance(st["cpu"], float) and 0 <= st["cpu"] <= 100 and st["mem"] is not None)
@@ -98,7 +119,7 @@ check("GPU % + หน่วยความจำ GPU", st["gpu"] == 37 and st["g
 m = {x["name"]: x for x in st["ollama"]["models"]}
 check("Ollama: โมเดลแบ่ง CPU 48% / GPU 52%", m["qwen3-coder:30b"]["cpu_pct"] == 48 and m["qwen3-coder:30b"]["gpu_pct"] == 52)
 check("Ollama: โมเดล 100% GPU", m["qwen2.5-coder:3b"]["gpu_pct"] == 100 and m["qwen2.5-coder:3b"]["cpu_pct"] == 0)
-check("หน้าจอ terminal + ประวัติคำสั่ง", "พร้อมทำงาน" in st["screen"] and st["history"][0]["action"] == "reset")
+check("หน้าจอ terminal + ประวัติคำสั่ง", "พร้อมทำงาน" in st["screen"] and st["history"][0]["action"] == "restart")
 
 print("── ล็อก / เปลี่ยนรหัส ──")
 boss.post("/agent/lock")

@@ -4,6 +4,15 @@
 
 ---
 
+## 2026-10-08 — AI Agent: กลุ่มปุ่ม Session (New) + ปุ่มคีย์ Ctrl (Claude, branch `claude/agent-keys`)
+
+- 🆕 Session: ▶️ เริ่ม session ใหม่ (tmux new -d -s hermes + เปิด Hermes) · 🔁 รีสตาร์ต Hermes · 💬 บทสนทนาใหม่ (/new)
+  → ไม่ต้องเปิด terminal เองอีก (ปุ่มเริ่มจะเด่นขึ้นเมื่อไม่มี session) · คำสั่งเปิดตั้งได้ที่ `AGENT_START_CMD`
+- ⌨️ ปุ่มคีย์: Ctrl+C/D/L/U/R/Z, Esc, Tab, ↑, ↓, ⏎ Enter — เซิร์ฟเวอร์รับเฉพาะคีย์ในรายการ
+- ทดสอบ: smoke_agent 32 ข้อ + tmux จริงผ่านเบราว์เซอร์ (ไม่มี session → กดเริ่ม → ส่งข้อความ → Ctrl+C → รีสตาร์ต)
+
+---
+
 ## 2026-10-08 — แก้ AI Agent: ส่งแล้ว Hermes ไม่ตอบ (Claude, branch `claude/agent-enter`)
 
 - อาการ: ข้อความไปค้างในช่องพิมพ์ของ Hermes เป็นหลายบรรทัด ไม่ถูกส่ง

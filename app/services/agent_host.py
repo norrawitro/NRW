@@ -9,6 +9,7 @@
   AGENT_RESET=/new                              ปุ่ม Reset: ข้อความที่ส่ง (เช่น /new หรือ /reset)
   AGENT_ENTER_DELAY=0.6                         รอกี่วินาทีหลังพิมพ์ก่อนกด Enter (Hermes มองว่าข้อความ+Enter ที่มาพร้อมกัน
                                                 = การวาง (paste) → Enter กลายเป็นขึ้นบรรทัดใหม่แทนการส่ง)
+  AGENT_START_CMD=hermes                        คำสั่งเปิด Hermes ตอนกด "เริ่ม/รีสตาร์ต session" จากหน้าเว็บ
   OLLAMA_URL=http://localhost:11434"""
 import os
 import shutil
@@ -22,7 +23,11 @@ STOP_CMD = os.getenv("AGENT_STOP", "C-c")
 RESET_CMD = os.getenv("AGENT_RESET", "/new")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 DEFAULT_MODELS = "9arm Gateway=/model 9arm;Coder 30B=/model qwen3-coder:30b;Coder 3B=/model qwen2.5-coder:3b"
-TMUX_KEYS = {"C-c", "C-d", "C-z", "Escape", "Enter"}     # ปุ่มพิเศษที่ส่งเป็นการกดคีย์
+START_CMD = os.getenv("AGENT_START_CMD", "hermes")
+# ปุ่มคีย์ที่หน้าเว็บกดได้ (ชื่อตาม tmux send-keys) — นอกรายการนี้ส่งไม่ได้
+KEYS = {"C-c": "Ctrl+C", "C-d": "Ctrl+D", "C-l": "Ctrl+L", "C-u": "Ctrl+U", "C-r": "Ctrl+R", "C-z": "Ctrl+Z",
+        "Escape": "Esc", "Tab": "Tab", "Up": "↑", "Down": "↓", "Enter": "⏎ Enter"}
+TMUX_KEYS = set(KEYS)
 
 
 def models() -> list[dict]:
@@ -185,6 +190,29 @@ def ollama_status() -> dict:
         return {"online": code == 0, "models": parse_ollama_ps(out) if code == 0 else []}
 
 
+def session_name() -> str:
+    return TMUX_TARGET.split(":")[0].split(".")[0]
+
+
+def start_session() -> tuple[bool, str]:
+    """สร้าง tmux session (ทำงานเบื้องหลัง) แล้วเปิด Hermes ข้างใน — มีอยู่แล้วไม่สร้างซ้ำ"""
+    if tmux_alive():
+        return False, f"มี session {session_name()} อยู่แล้ว"
+    code, out = run(["tmux", "new-session", "-d", "-s", session_name(), "-x", "200", "-y", "50"])
+    if code != 0:
+        return False, out.strip() or ("ไม่พบโปรแกรม tmux — ติดตั้งด้วย sudo apt install -y tmux" if code == 127 else "สร้าง session ไม่ได้")
+    time.sleep(0.3)
+    return send_text(START_CMD)
+
+
+def restart_session() -> tuple[bool, str]:
+    """ปิด session เดิม (ถ้ามี) แล้วเปิดใหม่"""
+    if tmux_alive():
+        run(["tmux", "kill-session", "-t", session_name()])
+        time.sleep(0.3)
+    return start_session()
+
+
 def tmux_alive() -> bool:
-    code, _ = run(["tmux", "has-session", "-t", TMUX_TARGET.split(":")[0]])
+    code, _ = run(["tmux", "has-session", "-t", session_name()])
     return code == 0

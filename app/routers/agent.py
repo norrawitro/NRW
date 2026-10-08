@@ -9,7 +9,9 @@
 GET  /agent/state            เปิดใช้/ปลดล็อกแล้วหรือยัง + ปุ่มโมเดล
 POST /agent/unlock {password} · POST /agent/lock
 GET  /agent/status           CPU/RAM/GPU %, โมเดลใน Ollama (สัดส่วน CPU/GPU), tmux, หน้าจอ terminal
-POST /agent/send {text} · POST /agent/model {id} · POST /agent/stop · POST /agent/reset · POST /agent/enter"""
+POST /agent/send {text} · POST /agent/model {id} · POST /agent/stop · POST /agent/reset · POST /agent/enter
+POST /agent/key {key}        กดปุ่มคีย์ (Ctrl+C/D/L/U/R/Z, Esc, Tab, ↑, ↓, Enter) — เฉพาะในรายการ
+POST /agent/session {action: start|restart}   สร้าง/รีสตาร์ต tmux session + เปิด Hermes จากหน้าเว็บ"""
 import hashlib
 import hmac
 import logging
@@ -107,7 +109,8 @@ def state(request: Request, db: Session = Depends(get_db)):
     me = _owner(request, db)
     left = _session_left(request, me) if password_hash() else 0
     return {"enabled": bool(password_hash()), "unlocked": left > 0, "expires_in": left,
-            "target": host.TMUX_TARGET, "models": host.models(), "stop": host.STOP_CMD, "reset": host.RESET_CMD}
+            "target": host.TMUX_TARGET, "models": host.models(), "stop": host.STOP_CMD, "reset": host.RESET_CMD,
+            "keys": [{"key": k, "label": v} for k, v in host.KEYS.items()], "start_cmd": host.START_CMD}
 
 
 class UnlockIn(BaseModel):
@@ -197,6 +200,32 @@ def enter(request: Request, db: Session = Depends(get_db)):
     me = _unlocked(request, db)
     ok, msg = host.press("Enter")
     return _record(me, "enter", "⏎", ok, msg)
+
+
+class KeyIn(BaseModel):
+    key: str = Field(..., max_length=10)
+
+
+@router.post("/key")
+def key(body: KeyIn, request: Request, db: Session = Depends(get_db)):
+    me = _unlocked(request, db)
+    if body.key not in host.KEYS:
+        raise HTTPException(status_code=400, detail="ปุ่มนี้ไม่อยู่ในรายการที่อนุญาต")
+    ok, msg = host.press(body.key)
+    return _record(me, "key", host.KEYS[body.key], ok, msg)
+
+
+class SessionIn(BaseModel):
+    action: str = Field(..., pattern="^(start|restart)$")
+
+
+@router.post("/session")
+def session(body: SessionIn, request: Request, db: Session = Depends(get_db)):
+    me = _unlocked(request, db)
+    if body.action == "start" and host.tmux_alive():
+        raise HTTPException(status_code=400, detail=f"มี session {host.session_name()} ทำงานอยู่แล้ว — ใช้รีสตาร์ตแทน")
+    ok, msg = host.start_session() if body.action == "start" else host.restart_session()
+    return _record(me, body.action, f"tmux {host.session_name()} → {host.START_CMD}", ok, msg)
 
 
 @router.post("/reset")

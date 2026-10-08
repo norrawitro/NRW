@@ -55,8 +55,13 @@ const AgentUI = {
       <div class="ag-cmds"><button class="btn-ghost" id="agQueue" title="ใส่ /queue ลงช่องพิมพ์ (ยังไม่ส่ง)">📥 Queue</button>
         <button class="btn-ghost ag-stop" id="agStop" title="${esc(s.stop==='C-c'?'กด Ctrl+C':'ส่ง '+s.stop)}">⏹ Stop</button>
         <button class="btn-ghost" id="agReset" title="ส่ง ${esc(s.reset)}">🔄 Reset</button>
-        <button class="btn-ghost" id="agEnter" title="กด Enter ใน Hermes (ส่งข้อความที่ค้างอยู่ในช่องพิมพ์)">⏎ Enter</button>
+
         <button class="btn-primary" id="agSend">ส่ง ➤</button></div>
+      <div class="ag-group"><small class="m-muted">⌨️ ปุ่มคีย์:</small> ${s.keys.map(k=>`<button class="btn-ghost m-sm ag-key" data-agkey="${esc(k.key)}">${esc(k.label)}</button>`).join('')}</div>
+      <div class="ag-group"><small class="m-muted">🆕 Session:</small>
+        <button class="btn-ghost m-sm" id="agStart" title="tmux new -d -s ${esc(s.target)} แล้วรัน ${esc(s.start_cmd)}">▶️ เริ่ม session ใหม่</button>
+        <button class="btn-ghost m-sm" id="agRestart" title="ปิด session เดิมแล้วเปิดใหม่">🔁 รีสตาร์ต Hermes</button>
+        <button class="btn-ghost m-sm" id="agNew" title="ส่ง ${esc(s.reset)} — เริ่มบทสนทนาใหม่ใน Hermes">💬 บทสนทนาใหม่ (${esc(s.reset)})</button></div>
       <details class="ag-hist"><summary>ประวัติคำสั่ง</summary><div id="agHist"></div></details></div>`;
     const t = document.getElementById('agText');
     t.onkeydown = e=>{ if(e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); this.send(); } };
@@ -70,7 +75,10 @@ const AgentUI = {
     if(e.target.id==='agStop') return this.act('/agent/stop', {}, 'ส่ง Stop แล้ว');
     if(e.target.id==='agReset' && confirm('Reset บทสนทนาของ Agent?')) return this.act('/agent/reset', {}, 'ส่ง Reset แล้ว');
     if(e.target.id==='agSend') return this.send();
-    if(e.target.id==='agEnter') return this.act('/agent/enter', {}, 'กด Enter แล้ว');
+    const k = e.target.closest('[data-agkey]'); if(k) return this.act('/agent/key', {key:k.dataset.agkey}, `กด ${k.textContent} แล้ว`);
+    if(e.target.id==='agStart') return this.act('/agent/session', {action:'start'}, 'เริ่ม session แล้ว — รอ Hermes เปิดสักครู่');
+    if(e.target.id==='agRestart' && confirm('ปิด Hermes ตัวเดิมแล้วเปิดใหม่?')) return this.act('/agent/session', {action:'restart'}, 'รีสตาร์ตแล้ว — รอ Hermes เปิดสักครู่');
+    if(e.target.id==='agNew') return this.act('/agent/reset', {}, 'เริ่มบทสนทนาใหม่แล้ว');
     if(e.target.id==='agLock'){ await this.call('/agent/lock', {}); this.drawLock(); }
   },
   async send(){
@@ -106,7 +114,8 @@ const AgentUI = {
       <div class="ag-ollama"><small class="m-muted">Ollama (ollama ps):</small>${models}</div>
       <div class="ag-tmux">${d.tmux.alive?`🟢 tmux <code>${esc(d.tmux.target)}</code> ทำงานอยู่`:`🔴 ไม่พบ tmux session <code>${esc(d.tmux.target)}</code>`} <small class="m-muted">· อัปเดต ${esc(d.time)}</small></div>`;
     const scr = document.getElementById('agScreen'), atBottom = scr.scrollTop + scr.clientHeight >= scr.scrollHeight - 30;
-    scr.textContent = d.screen || (d.tmux.alive ? '' : `ยังไม่มี tmux session ชื่อ ${d.tmux.target}\nเริ่มด้วย: tmux new -s ${d.tmux.target}  แล้วรัน hermes ในนั้น`);
+    scr.textContent = d.screen || (d.tmux.alive ? '' : `ยังไม่มี tmux session ชื่อ ${d.tmux.target}\nกดปุ่ม ▶️ เริ่ม session ใหม่ ด้านล่าง เพื่อเปิด Hermes`);
+    const st = document.getElementById('agStart'); if(st) st.classList.toggle('btn-primary', !d.tmux.alive);
     if(atBottom) scr.scrollTop = scr.scrollHeight;
     const left = document.getElementById('agLeft'); if(left) left.textContent = `ล็อกอัตโนมัติใน ${Math.ceil(d.expires_in/60)} นาที`;
     document.getElementById('agHist').innerHTML = d.history.map(h=>`<div class="m-row"><small>${esc(h.time)} · ${esc(h.action)}</small><small class="m-muted">${esc(h.detail)}</small></div>`).join('') || '<small class="m-muted">ยังไม่มี</small>';

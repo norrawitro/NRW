@@ -135,3 +135,5 @@
 .ag-stop{color:#e5484d}
 .ag-hist{margin-top:10px;font-size:13px}
 @media (max-width:640px){.ag-status{top:56px}.ag-cmds button{flex:1}}
+.ag-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.ag-key{min-width:44px;font-family:ui-monospace,Menlo,Consolas,monospace}
