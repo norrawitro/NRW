@@ -24,6 +24,7 @@
 | `data.js` | รายชื่อ 23 ระบบ (`MODULES`), ช่วงพัฒนา (`PHASES`), `State`, `DataLayer` | เพิ่ม/เปลี่ยนชื่อระบบ |
 | `core.js` | `api()`, `toast()`, `baht()`, `registerModule()`, `isLive()`, ผู้ใช้ที่ login (`State.me`), ธีมมืด | ตัวช่วยกลาง |
 | `ui_kit.js` | ชิ้นส่วนร่วมรูปแบบเดียวกัน: `imagePicker(id)` + `pickedImages(id)` (แนบรูป ≤5 → `POST /media/images`), `gallery(images)`, `itemCard({...})` การ์ดรูป+ข้อความ+ราคา+ปุ่ม | ช่องแนบรูป / หน้าตาการ์ดทุกระบบ |
+| `tts.js` | `Speech` — อ่านออกเสียงด้วยเครื่องผู้ใช้ (Web Speech API): ปุ่ม 🔊 ท้ายข้อความ AI + อ่านอัตโนมัติ | เสียงอ่านคำตอบ AI |
 | `api.js` | `fetchWallet()`, `fetchCloud()`, `fmtSize()` | การโหลดข้อมูลกระเป๋าเงิน/คลาวด์ |
 | `home.js` | เมนูด้านข้าง, ไอคอนระบบ, hero slides | หน้าแรก, เมนู |
 | `news.js` | โพสต์, feed, ถูกใจ, ความเห็น, โพสต์ใหม่, `esc()` | ข่าวสาร |

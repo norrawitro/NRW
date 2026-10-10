@@ -110,3 +110,14 @@ body.sidebar-collapsed .main{margin-left:0}
 .brand-name{display:flex;flex-direction:column;line-height:1.05}
 .brand-tag{font-size:10px;font-weight:600;color:var(--ink-soft);letter-spacing:.2px}
 @media (max-width:640px){.brand-tag{display:none}}
+/* มือถือ: หัวเว็บไม่ล้นจอ — ช่องค้นหาหดได้, ปุ่มเล็กลง */
+@media (max-width:560px){
+  .header{gap:6px;padding:0 8px}
+  .search{min-width:0;flex:1 1 0;padding:0 10px;height:38px}
+  .search input{min-width:0;font-size:13px}
+  .header-right{gap:4px;flex-shrink:0}
+  .chip{height:34px;padding:0 8px;font-size:12.5px;gap:4px}
+  .icon-btn,.avatar{width:34px;height:34px;flex-shrink:0}
+  .hamburger{width:34px}
+}
+@media (max-width:380px){ #themeBtn{display:none} }

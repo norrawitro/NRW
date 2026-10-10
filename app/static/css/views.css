@@ -84,3 +84,7 @@
   .brand-name{display:none}.search{max-width:none}.video-row{grid-template-columns:1fr}
   .main{padding:16px}.foot-grid{grid-template-columns:1fr 1fr}.drawer{width:100vw}
 }
+/* อ่านออกเสียง (tts.js) */
+.msg .tts-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;font-size:13px;line-height:1}
+.msg .tts-btn.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.tts-auto{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-left:auto;cursor:pointer;white-space:nowrap}
